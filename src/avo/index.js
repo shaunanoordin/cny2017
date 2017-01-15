@@ -22,14 +22,16 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
       topdownView: true,
     };
     this.runCycle = null;
-    this.html = document.getElementById("app");
-    this.canvas = document.getElementById("canvas");
-    this.context2d = this.canvas.getContext("2d");
+    this.html = {
+      app: document.getElementById("app"),
+      canvas: document.getElementById("canvas"),
+    };
+    this.context2d = this.html.canvas.getContext("2d");
     this.boundingBox = null;  //To be defined by this.updateSize().
     this.sizeRatioX = 1;
     this.sizeRatioY = 1;
-    this.width = this.canvas.width;
-    this.height = this.canvas.height;
+    this.canvasWidth = this.html.canvas.width;
+    this.canvasHeight = this.html.canvas.height;
     this.state = null;
     this.animationSets = {};
     //--------------------------------
@@ -78,18 +80,18 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     
     //Bind Events
     //--------------------------------
-    if ("onmousedown" in this.canvas && "onmousemove" in this.canvas &&
-        "onmouseup" in this.canvas) {
-      this.canvas.onmousedown = this.onPointerStart.bind(this);
-      this.canvas.onmousemove = this.onPointerMove.bind(this);
-      this.canvas.onmouseup = this.onPointerEnd.bind(this);
+    if ("onmousedown" in this.html.canvas && "onmousemove" in this.html.canvas &&
+        "onmouseup" in this.html.canvas) {
+      this.html.canvas.onmousedown = this.onPointerStart.bind(this);
+      this.html.canvas.onmousemove = this.onPointerMove.bind(this);
+      this.html.canvas.onmouseup = this.onPointerEnd.bind(this);
     }    
-    if ("ontouchstart" in this.canvas && "ontouchmove" in this.canvas &&
-        "ontouchend" in this.canvas && "ontouchcancel" in this.canvas) {
-      this.canvas.ontouchstart = this.onPointerStart.bind(this);
-      this.canvas.ontouchmove = this.onPointerMove.bind(this);
-      this.canvas.ontouchend = this.onPointerEnd.bind(this);
-      this.canvas.ontouchcancel = this.onPointerEnd.bind(this);
+    if ("ontouchstart" in this.html.canvas && "ontouchmove" in this.html.canvas &&
+        "ontouchend" in this.html.canvas && "ontouchcancel" in this.html.canvas) {
+      this.html.canvas.ontouchstart = this.onPointerStart.bind(this);
+      this.html.canvas.ontouchmove = this.onPointerMove.bind(this);
+      this.html.canvas.ontouchend = this.onPointerEnd.bind(this);
+      this.html.canvas.ontouchcancel = this.onPointerEnd.bind(this);
     }
     if ("onkeydown" in window && "onkeyup" in window) {
       window.onkeydown = this.onKeyDown.bind(this);
@@ -529,11 +531,11 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
   
   paint() {
     //Clear
-    this.context2d.clearRect(0, 0, this.width, this.height);
+    this.context2d.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
     
     if (this.ui.backgroundImage && this.ui.backgroundImage.loaded) {
       const image = this.ui.backgroundImage;
-      this.context2d.drawImage(image.img, (this.width - image.img.width) / 2, (this.height - image.img.height) / 2);
+      this.context2d.drawImage(image.img, (this.canvasWidth - image.img.width) / 2, (this.canvasHeight - image.img.height) / 2);
     }
     
     switch (this.state) {
@@ -553,7 +555,7 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     
     if (this.ui.foregroundImage && this.ui.foregroundImage.loaded) {
       const image = this.ui.foregroundImage;
-      this.context2d.drawImage(image.img, (this.width - image.img.width) / 2, (this.height - image.img.height) / 2);
+      this.context2d.drawImage(image.img, (this.canvasWidth - image.img.width) / 2, (this.canvasHeight - image.img.height) / 2);
     }
   }
   
@@ -567,26 +569,26 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     if (this.assetsLoaded < this.assetsTotal) {
       const rgb = Math.floor(percentage * 255);
       this.context2d.beginPath();
-      this.context2d.rect(0, 0, this.width, this.height);
+      this.context2d.rect(0, 0, this.canvasWidth, this.canvasHeight);
       this.context2d.fillStyle = "rgba("+rgb+","+rgb+","+rgb+",1)";
       this.context2d.fill();
       this.context2d.fillStyle = "#fff";
-      this.context2d.fillText("Loading... (" + this.assetsLoaded+"/" + this.assetsTotal + ")", this.width / 2, this.height / 2); 
+      this.context2d.fillText("Loading... (" + this.assetsLoaded+"/" + this.assetsTotal + ")", this.canvasWidth / 2, this.canvasHeight / 2); 
       this.context2d.closePath();
     } else {
       this.context2d.beginPath();
-      this.context2d.rect(0, 0, this.width, this.height);
+      this.context2d.rect(0, 0, this.canvasWidth, this.canvasHeight);
       this.context2d.fillStyle = "#fff";
       this.context2d.fill();
       this.context2d.fillStyle = "#000";
-      this.context2d.fillText("Ready!", this.width / 2, this.height / 2); 
+      this.context2d.fillText("Ready!", this.canvasWidth / 2, this.canvasHeight / 2); 
       this.context2d.closePath();
     }
     
   }
   paint_end() {
     this.context2d.beginPath();
-    this.context2d.rect(0, 0, this.width, this.height);
+    this.context2d.rect(0, 0, this.canvasWidth, this.canvasHeight);
     this.context2d.fillStyle = "#3cc";
     this.context2d.fill();
     this.context2d.closePath();    
@@ -689,7 +691,7 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     const comic = this.comicStrip;
     
     this.context2d.beginPath();
-    this.context2d.rect(0, 0, this.width, this.height);
+    this.context2d.rect(0, 0, this.canvasWidth, this.canvasHeight);
     this.context2d.fillStyle = comic.background;
     this.context2d.fill();
     this.context2d.closePath();
@@ -697,10 +699,10 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     switch (comic.state) {
       case AVO.COMIC_STRIP_STATE_TRANSITIONING:
         const offsetY = (comic.transitionTime > 0)
-          ? Math.floor(comic.counter / comic.transitionTime * -this.height)
+          ? Math.floor(comic.counter / comic.transitionTime * -this.canvasHeight)
           : 0;
         this.paintComicPanel(comic.getPreviousPanel(), offsetY);
-        this.paintComicPanel(comic.getCurrentPanel(), offsetY + this.height);
+        this.paintComicPanel(comic.getCurrentPanel(), offsetY + this.canvasHeight);
         break;
       case AVO.COMIC_STRIP_STATE_WAIT_BEFORE_INPUT:
         this.paintComicPanel(comic.getCurrentPanel());
@@ -742,8 +744,8 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
   paintComicPanel(panel = null, offsetY = 0) {
     if (!panel || !panel.loaded) return;
     
-    const ratioX = this.width / panel.img.width;
-    const ratioY = this.height / panel.img.height;
+    const ratioX = this.canvasWidth / panel.img.width;
+    const ratioY = this.canvasHeight / panel.img.height;
     const ratio = Math.min(1, Math.min(ratioX, ratioY));
     
     const srcX = 0;
@@ -753,8 +755,8 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     
     const tgtW = panel.img.width * ratio;
     const tgtH = panel.img.height * ratio;
-    const tgtX = (this.width - tgtW) / 2;  //TODO
-    const tgtY = (this.height - tgtH) / 2 + offsetY;  //TODO
+    const tgtX = (this.canvasWidth - tgtW) / 2;  //TODO
+    const tgtY = (this.canvasHeight - tgtH) / 2 + offsetY;  //TODO
     
     this.context2d.drawImage(panel.img, srcX, srcY, srcW, srcH, tgtX, tgtY, tgtW, tgtH);
   }
@@ -818,12 +820,12 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
   //----------------------------------------------------------------
   
   updateSize() {
-    let boundingBox = (this.canvas.getBoundingClientRect)
-      ? this.canvas.getBoundingClientRect()
+    let boundingBox = (this.html.canvas.getBoundingClientRect)
+      ? this.html.canvas.getBoundingClientRect()
       : { left: 0, top: 0 };
     this.boundingBox = boundingBox;
-    this.sizeRatioX = this.width / this.boundingBox.width;
-    this.sizeRatioY = this.height / this.boundingBox.height;
+    this.sizeRatioX = this.canvasWidth / this.boundingBox.width;
+    this.sizeRatioY = this.canvasHeight / this.boundingBox.height;
   }
 }
 

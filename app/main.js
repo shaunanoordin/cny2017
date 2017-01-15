@@ -116,14 +116,16 @@
 	      topdownView: true
 	    };
 	    this.runCycle = null;
-	    this.html = document.getElementById("app");
-	    this.canvas = document.getElementById("canvas");
-	    this.context2d = this.canvas.getContext("2d");
+	    this.html = {
+	      app: document.getElementById("app"),
+	      canvas: document.getElementById("canvas")
+	    };
+	    this.context2d = this.html.canvas.getContext("2d");
 	    this.boundingBox = null; //To be defined by this.updateSize().
 	    this.sizeRatioX = 1;
 	    this.sizeRatioY = 1;
-	    this.width = this.canvas.width;
-	    this.height = this.canvas.height;
+	    this.canvasWidth = this.html.canvas.width;
+	    this.canvasHeight = this.html.canvas.height;
 	    this.state = null;
 	    this.animationSets = {};
 	    //--------------------------------
@@ -172,16 +174,16 @@
 
 	    //Bind Events
 	    //--------------------------------
-	    if ("onmousedown" in this.canvas && "onmousemove" in this.canvas && "onmouseup" in this.canvas) {
-	      this.canvas.onmousedown = this.onPointerStart.bind(this);
-	      this.canvas.onmousemove = this.onPointerMove.bind(this);
-	      this.canvas.onmouseup = this.onPointerEnd.bind(this);
+	    if ("onmousedown" in this.html.canvas && "onmousemove" in this.html.canvas && "onmouseup" in this.html.canvas) {
+	      this.html.canvas.onmousedown = this.onPointerStart.bind(this);
+	      this.html.canvas.onmousemove = this.onPointerMove.bind(this);
+	      this.html.canvas.onmouseup = this.onPointerEnd.bind(this);
 	    }
-	    if ("ontouchstart" in this.canvas && "ontouchmove" in this.canvas && "ontouchend" in this.canvas && "ontouchcancel" in this.canvas) {
-	      this.canvas.ontouchstart = this.onPointerStart.bind(this);
-	      this.canvas.ontouchmove = this.onPointerMove.bind(this);
-	      this.canvas.ontouchend = this.onPointerEnd.bind(this);
-	      this.canvas.ontouchcancel = this.onPointerEnd.bind(this);
+	    if ("ontouchstart" in this.html.canvas && "ontouchmove" in this.html.canvas && "ontouchend" in this.html.canvas && "ontouchcancel" in this.html.canvas) {
+	      this.html.canvas.ontouchstart = this.onPointerStart.bind(this);
+	      this.html.canvas.ontouchmove = this.onPointerMove.bind(this);
+	      this.html.canvas.ontouchend = this.onPointerEnd.bind(this);
+	      this.html.canvas.ontouchcancel = this.onPointerEnd.bind(this);
 	    }
 	    if ("onkeydown" in window && "onkeyup" in window) {
 	      window.onkeydown = this.onKeyDown.bind(this);
@@ -739,11 +741,11 @@
 	    key: "paint",
 	    value: function paint() {
 	      //Clear
-	      this.context2d.clearRect(0, 0, this.width, this.height);
+	      this.context2d.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
 	      if (this.ui.backgroundImage && this.ui.backgroundImage.loaded) {
 	        var image = this.ui.backgroundImage;
-	        this.context2d.drawImage(image.img, (this.width - image.img.width) / 2, (this.height - image.img.height) / 2);
+	        this.context2d.drawImage(image.img, (this.canvasWidth - image.img.width) / 2, (this.canvasHeight - image.img.height) / 2);
 	      }
 
 	      switch (this.state) {
@@ -763,7 +765,7 @@
 
 	      if (this.ui.foregroundImage && this.ui.foregroundImage.loaded) {
 	        var _image = this.ui.foregroundImage;
-	        this.context2d.drawImage(_image.img, (this.width - _image.img.width) / 2, (this.height - _image.img.height) / 2);
+	        this.context2d.drawImage(_image.img, (this.canvasWidth - _image.img.width) / 2, (this.canvasHeight - _image.img.height) / 2);
 	      }
 	    }
 	  }, {
@@ -778,19 +780,19 @@
 	      if (this.assetsLoaded < this.assetsTotal) {
 	        var rgb = Math.floor(percentage * 255);
 	        this.context2d.beginPath();
-	        this.context2d.rect(0, 0, this.width, this.height);
+	        this.context2d.rect(0, 0, this.canvasWidth, this.canvasHeight);
 	        this.context2d.fillStyle = "rgba(" + rgb + "," + rgb + "," + rgb + ",1)";
 	        this.context2d.fill();
 	        this.context2d.fillStyle = "#fff";
-	        this.context2d.fillText("Loading... (" + this.assetsLoaded + "/" + this.assetsTotal + ")", this.width / 2, this.height / 2);
+	        this.context2d.fillText("Loading... (" + this.assetsLoaded + "/" + this.assetsTotal + ")", this.canvasWidth / 2, this.canvasHeight / 2);
 	        this.context2d.closePath();
 	      } else {
 	        this.context2d.beginPath();
-	        this.context2d.rect(0, 0, this.width, this.height);
+	        this.context2d.rect(0, 0, this.canvasWidth, this.canvasHeight);
 	        this.context2d.fillStyle = "#fff";
 	        this.context2d.fill();
 	        this.context2d.fillStyle = "#000";
-	        this.context2d.fillText("Ready!", this.width / 2, this.height / 2);
+	        this.context2d.fillText("Ready!", this.canvasWidth / 2, this.canvasHeight / 2);
 	        this.context2d.closePath();
 	      }
 	    }
@@ -798,7 +800,7 @@
 	    key: "paint_end",
 	    value: function paint_end() {
 	      this.context2d.beginPath();
-	      this.context2d.rect(0, 0, this.width, this.height);
+	      this.context2d.rect(0, 0, this.canvasWidth, this.canvasHeight);
 	      this.context2d.fillStyle = "#3cc";
 	      this.context2d.fill();
 	      this.context2d.closePath();
@@ -990,16 +992,16 @@
 	      var comic = this.comicStrip;
 
 	      this.context2d.beginPath();
-	      this.context2d.rect(0, 0, this.width, this.height);
+	      this.context2d.rect(0, 0, this.canvasWidth, this.canvasHeight);
 	      this.context2d.fillStyle = comic.background;
 	      this.context2d.fill();
 	      this.context2d.closePath();
 
 	      switch (comic.state) {
 	        case AVO.COMIC_STRIP_STATE_TRANSITIONING:
-	          var offsetY = comic.transitionTime > 0 ? Math.floor(comic.counter / comic.transitionTime * -this.height) : 0;
+	          var offsetY = comic.transitionTime > 0 ? Math.floor(comic.counter / comic.transitionTime * -this.canvasHeight) : 0;
 	          this.paintComicPanel(comic.getPreviousPanel(), offsetY);
-	          this.paintComicPanel(comic.getCurrentPanel(), offsetY + this.height);
+	          this.paintComicPanel(comic.getCurrentPanel(), offsetY + this.canvasHeight);
 	          break;
 	        case AVO.COMIC_STRIP_STATE_WAIT_BEFORE_INPUT:
 	          this.paintComicPanel(comic.getCurrentPanel());
@@ -1044,8 +1046,8 @@
 
 	      if (!panel || !panel.loaded) return;
 
-	      var ratioX = this.width / panel.img.width;
-	      var ratioY = this.height / panel.img.height;
+	      var ratioX = this.canvasWidth / panel.img.width;
+	      var ratioY = this.canvasHeight / panel.img.height;
 	      var ratio = Math.min(1, Math.min(ratioX, ratioY));
 
 	      var srcX = 0;
@@ -1055,8 +1057,8 @@
 
 	      var tgtW = panel.img.width * ratio;
 	      var tgtH = panel.img.height * ratio;
-	      var tgtX = (this.width - tgtW) / 2; //TODO
-	      var tgtY = (this.height - tgtH) / 2 + offsetY; //TODO
+	      var tgtX = (this.canvasWidth - tgtW) / 2; //TODO
+	      var tgtY = (this.canvasHeight - tgtH) / 2 + offsetY; //TODO
 
 	      this.context2d.drawImage(panel.img, srcX, srcY, srcW, srcH, tgtX, tgtY, tgtW, tgtH);
 	    }
@@ -1129,10 +1131,10 @@
 	  }, {
 	    key: "updateSize",
 	    value: function updateSize() {
-	      var boundingBox = this.canvas.getBoundingClientRect ? this.canvas.getBoundingClientRect() : { left: 0, top: 0 };
+	      var boundingBox = this.html.canvas.getBoundingClientRect ? this.html.canvas.getBoundingClientRect() : { left: 0, top: 0 };
 	      this.boundingBox = boundingBox;
-	      this.sizeRatioX = this.width / this.boundingBox.width;
-	      this.sizeRatioY = this.height / this.boundingBox.height;
+	      this.sizeRatioX = this.canvasWidth / this.boundingBox.width;
+	      this.sizeRatioY = this.canvasHeight / this.boundingBox.height;
 	    }
 	  }]);
 
@@ -1816,13 +1818,12 @@
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 	/*
-	Example Game
+	CNY2017
 	============
 
-	While AvO is the adventure game engine, this is a specific implementation of an
-	adventure game idea.
+	Happy Chinese New Year!
 
-	(Shaun A. Noordin || shaunanoordin.com || 20161001)
+	(Shaun A. Noordin || shaunanoordin.com || 20170115)
 	********************************************************************************
 	 */
 
@@ -1838,17 +1839,8 @@
 	  //--------------------------------
 	  this.assets.images.actor = new _utility.ImageAsset("assets/cny2017/actor.png");
 	  this.assets.images.sarcophagus = new _utility.ImageAsset("assets/cny2017/sarcophagus.png");
-	  this.assets.images.gate = new _utility.ImageAsset("assets/cny2017/gate.png");
-	  this.assets.images.plate = new _utility.ImageAsset("assets/cny2017/plate.png");
-	  this.assets.images.goal = new _utility.ImageAsset("assets/cny2017/goal.png");
-	  this.assets.images.background = new _utility.ImageAsset("assets/cny2017/background.png");
 
 	  this.assets.images.comicPanelA = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-red.png");
-	  this.assets.images.comicPanelB = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-blue.png");
-	  this.assets.images.comicPanelC = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-yellow.png");
-	  this.assets.images.comicPanelSmall = new _utility.ImageAsset("assets/cny2017/comic-panel-500x500-green.png");
-	  this.assets.images.comicPanelBig = new _utility.ImageAsset("assets/cny2017/comic-panel-1000x1000-pink.png");
-	  this.assets.images.comicPanelWide = new _utility.ImageAsset("assets/cny2017/comic-panel-1000x300-teal.png");
 	  //--------------------------------
 
 	  //Animations
@@ -1889,58 +1881,7 @@
 	          steps: [{ col: 1, row: 0, duration: STEPS_PER_SECOND * 4 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 1, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 1, row: 0, duration: STEPS_PER_SECOND * 4 }]
 	        }
 	      }
-	    },
-
-	    plate: {
-	      rule: AVO.ANIMATION_RULE_BASIC,
-	      tileWidth: 64,
-	      tileHeight: 64,
-	      tileOffsetX: 0,
-	      tileOffsetY: 0,
-	      actions: {
-	        idle: {
-	          loop: true,
-	          steps: [{ col: 0, row: 0, duration: 1 }]
-	        },
-	        glow: {
-	          loop: true,
-	          steps: [{ col: 1, row: 0, duration: STEPS_PER_SECOND * 4 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 1, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 1, row: 0, duration: STEPS_PER_SECOND * 4 }]
-	        }
-	      }
-	    },
-
-	    simple128: {
-	      rule: AVO.ANIMATION_RULE_BASIC,
-	      tileWidth: 128,
-	      tileHeight: 128,
-	      tileOffsetX: 0,
-	      tileOffsetY: 0,
-	      actions: {
-	        idle: {
-	          loop: true,
-	          steps: [{ col: 0, row: 0, duration: 1 }]
-	        }
-	      }
-	    },
-
-	    simple64: {
-	      rule: AVO.ANIMATION_RULE_BASIC,
-	      tileWidth: 64,
-	      tileHeight: 64,
-	      tileOffsetX: 0,
-	      tileOffsetY: 0,
-	      actions: {
-	        idle: {
-	          loop: true,
-	          steps: [{ col: 0, row: 0, duration: 1 }]
-	        },
-	        glow: {
-	          loop: true,
-	          steps: [{ col: 0, row: 0, duration: STEPS_PER_SECOND * 3 }, { col: 1, row: 0, duration: STEPS_PER_SECOND * 3 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 3 }, { col: 1, row: 1, duration: STEPS_PER_SECOND * 3 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 3 }, { col: 1, row: 0, duration: STEPS_PER_SECOND * 3 }, { col: 0, row: 0, duration: STEPS_PER_SECOND * 3 }]
-	        }
-	      }
 	    }
-
 	  };
 
 	  //Process Animations; expand steps to many frames per steps.
@@ -1983,11 +1924,17 @@
 	}
 
 	function runStart() {
-	  this.store.level = 1;
-
-	  if (this.pointer.state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
+	  /*if (this.pointer.state === AVO.INPUT_ACTIVE || 
+	      this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE ||
+	      this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE ||
+	      this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE ||
+	      this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE ||
+	      this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE ||
+	      this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
 	    this.changeState(AVO.STATE_COMIC, comicStart);
-	  }
+	  }*/
+
+	  this.changeState(AVO.STATE_COMIC, comicStart);
 	}
 
 	function comicStart() {
@@ -1999,267 +1946,33 @@
 	}
 
 	function comicStartFinished() {
-	  this.changeState(AVO.STATE_ACTION, startLevel1);
+	  this.changeState(AVO.STATE_ACTION, initialiseLevel);
 	}
 
 	function runEnd() {}
 
 	function runAction() {
-	  //Animations
-	  //--------------------------------
-	  //WARNING: This is no longer working due to new Action/Intent rules
-	  if (this.refs["boxes"]) {
-	    var _iteratorNormalCompletion2 = true;
-	    var _didIteratorError2 = false;
-	    var _iteratorError2 = undefined;
-
-	    try {
-	      for (var _iterator2 = this.refs["boxes"][Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	        var box = _step2.value;
-
-	        if (box.effects.find(function (eff) {
-	          return eff.name === "charge";
-	        })) {
-	          box.playAnimation("glow");
-	        } else {
-	          box.playAnimation("idle");
-	        }
-	      }
-	    } catch (err) {
-	      _didIteratorError2 = true;
-	      _iteratorError2 = err;
-	    } finally {
-	      try {
-	        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-	          _iterator2.return();
-	        }
-	      } finally {
-	        if (_didIteratorError2) {
-	          throw _iteratorError2;
-	        }
-	      }
-	    }
-	  }
-	  //--------------------------------
-
-	  //Game rules
-	  //--------------------------------
-	  checkIfAllBoxesAreCharged.apply(this);
-	  //--------------------------------
-
-	  //Win Condition
-	  //--------------------------------
-	  checkIfPlayerIsAtGoal.apply(this);
-	  //--------------------------------
+	  if (this.refs[AVO.REF.PLAYER].x < 0) this.refs[AVO.REF.PLAYER].x = 0;
+	  if (this.refs[AVO.REF.PLAYER].y < 0) this.refs[AVO.REF.PLAYER].y = 0;
+	  if (this.refs[AVO.REF.PLAYER].x > this.canvasWidth) this.refs[AVO.REF.PLAYER].x = this.canvasWidth;
+	  if (this.refs[AVO.REF.PLAYER].y > this.canvasHeight) this.refs[AVO.REF.PLAYER].y = this.canvasHeight;
 	}
 
-	function startLevelInit() {
+	function initialiseLevel() {
 	  //Reset
 	  this.actors = [];
 	  this.areasOfEffect = [];
 	  this.refs = {};
 
-	  var midX = this.width / 2,
-	      midY = this.height / 2;
+	  var midX = this.canvasWidth / 2,
+	      midY = this.canvasHeight / 2;
 
-	  this.refs[AVO.REF.PLAYER] = new _entities.Actor(AVO.REF.PLAYER, midX, midY + 256, 32, AVO.SHAPE_CIRCLE);
+	  this.refs[AVO.REF.PLAYER] = new _entities.Actor(AVO.REF.PLAYER, midX, midY, 32, AVO.SHAPE_CIRCLE);
 	  this.refs[AVO.REF.PLAYER].spritesheet = this.assets.images.actor;
 	  this.refs[AVO.REF.PLAYER].animationSet = this.animationSets.actor;
-	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 4;
-	  this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_NORTH;
+	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
+	  this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
 	  this.actors.push(this.refs[AVO.REF.PLAYER]);
-
-	  this.refs["gate"] = new _entities.Actor("gate", midX, 16, 128, AVO.SHAPE_SQUARE);
-	  this.refs["gate"].canBeMoved = false;
-	  this.refs["gate"].spritesheet = this.assets.images.gate;
-	  this.refs["gate"].animationSet = this.animationSets.simple128;
-	  this.refs["gate"].playAnimation("idle");
-	  this.actors.push(this.refs["gate"]);
-
-	  this.refs["goal"] = new _entities.AoE("goal", this.width / 2, 32, 64, AVO.SHAPE_SQUARE, AVO.DURATION_INFINITE, []);
-	  this.refs["goal"].spritesheet = this.assets.images.goal;
-	  this.refs["goal"].animationSet = this.animationSets.simple64;
-	  this.refs["goal"].playAnimation("glow");
-	  this.areasOfEffect.push(this.refs["goal"]);
-	}
-
-	function startLevel1() {
-	  startLevelInit.apply(this);
-	  //this.areasOfEffect.push(
-	  //  new AoE("conveyorBelt", this.width / 2, this.height / 2 + 64, 64, AVO.SHAPE_SQUARE, AVO.DURATION_INFINITE,
-	  //    [new Effect("push", { x: 0, y: 4 }, 4, AVO.STACKING_RULE_ADD, null)], null)
-	  //);
-	  //this.actors.push(new Actor("s1", Math.floor(Math.random() * this.width * 0.8) + this.width * 0.1, Math.floor(Math.random() * this.height * 0.8) + this.height * 0.1, 32 + Math.random() * 64, AVO.SHAPE_SQUARE));
-
-	  var midX = this.width / 2,
-	      midY = this.height / 2;
-
-	  this.refs.boxes = [];
-	  this.refs.plates = [];
-	  var newBox = void 0,
-	      newPlate = void 0;
-	  var chargeEffect = new _entities.Effect("charge", {}, 4, AVO.STACKING_RULE_ADD, null);
-
-	  this.refs.boxes = [new _entities.Actor("", midX - 128, midY - 64, 64, AVO.SHAPE_SQUARE), new _entities.Actor("", midX + 128, midY - 64, 64, AVO.SHAPE_SQUARE)];
-	  var _iteratorNormalCompletion3 = true;
-	  var _didIteratorError3 = false;
-	  var _iteratorError3 = undefined;
-
-	  try {
-	    for (var _iterator3 = this.refs.boxes[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-	      var box = _step3.value;
-
-	      box.attributes["box"] = true;
-	      box.spritesheet = this.assets.images.sarcophagus;
-	      box.animationSet = this.animationSets.sarcophagus;
-	      this.actors.push(box);
-	    }
-	  } catch (err) {
-	    _didIteratorError3 = true;
-	    _iteratorError3 = err;
-	  } finally {
-	    try {
-	      if (!_iteratorNormalCompletion3 && _iterator3.return) {
-	        _iterator3.return();
-	      }
-	    } finally {
-	      if (_didIteratorError3) {
-	        throw _iteratorError3;
-	      }
-	    }
-	  }
-
-	  this.refs.plates = [new _entities.AoE("plate", midX - 128, midY + 64, 64, AVO.SHAPE_SQUARE, AVO.DURATION_INFINITE, [chargeEffect.copy()]), new _entities.AoE("plate", midX + 128, midY + 64, 64, AVO.SHAPE_SQUARE, AVO.DURATION_INFINITE, [chargeEffect.copy()])];
-	  var _iteratorNormalCompletion4 = true;
-	  var _didIteratorError4 = false;
-	  var _iteratorError4 = undefined;
-
-	  try {
-	    for (var _iterator4 = this.refs.plates[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-	      var plate = _step4.value;
-
-	      plate.spritesheet = this.assets.images.plate;
-	      plate.animationSet = this.animationSets.plate;
-	      plate.playAnimation("idle");
-	      this.areasOfEffect.push(plate);
-	    }
-	  } catch (err) {
-	    _didIteratorError4 = true;
-	    _iteratorError4 = err;
-	  } finally {
-	    try {
-	      if (!_iteratorNormalCompletion4 && _iterator4.return) {
-	        _iterator4.return();
-	      }
-	    } finally {
-	      if (_didIteratorError4) {
-	        throw _iteratorError4;
-	      }
-	    }
-	  }
-
-	  this.ui.backgroundImage = this.assets.images.background;
-	}
-
-	function startLevel2() {
-	  startLevelInit.apply(this);
-	}
-
-	function startLevel3() {
-	  startLevelInit.apply(this);
-	}
-
-	function checkIfAllBoxesAreCharged() {
-	  var allBoxesAreCharged = true;
-
-	  if (this.refs["plates"] && this.refs["boxes"]) {
-	    var _iteratorNormalCompletion5 = true;
-	    var _didIteratorError5 = false;
-	    var _iteratorError5 = undefined;
-
-	    try {
-	      for (var _iterator5 = this.refs["plates"][Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-	        var plate = _step5.value;
-
-	        var thisPlateIsCharged = false;
-	        var _iteratorNormalCompletion6 = true;
-	        var _didIteratorError6 = false;
-	        var _iteratorError6 = undefined;
-
-	        try {
-	          for (var _iterator6 = this.refs["boxes"][Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-	            var box = _step6.value;
-
-	            if (this.isATouchingB(box, plate)) {
-	              thisPlateIsCharged = true;
-	              plate.playAnimation("glow");
-	            }
-	          }
-	        } catch (err) {
-	          _didIteratorError6 = true;
-	          _iteratorError6 = err;
-	        } finally {
-	          try {
-	            if (!_iteratorNormalCompletion6 && _iterator6.return) {
-	              _iterator6.return();
-	            }
-	          } finally {
-	            if (_didIteratorError6) {
-	              throw _iteratorError6;
-	            }
-	          }
-	        }
-
-	        !thisPlateIsCharged && plate.playAnimation("idle");
-	        allBoxesAreCharged = allBoxesAreCharged && thisPlateIsCharged;
-	      }
-	    } catch (err) {
-	      _didIteratorError5 = true;
-	      _iteratorError5 = err;
-	    } finally {
-	      try {
-	        if (!_iteratorNormalCompletion5 && _iterator5.return) {
-	          _iterator5.return();
-	        }
-	      } finally {
-	        if (_didIteratorError5) {
-	          throw _iteratorError5;
-	        }
-	      }
-	    }
-	  }
-
-	  if (allBoxesAreCharged) {
-	    if (this.refs["gate"] && this.refs["gate"].y >= -32) {
-	      this.refs["gate"].x = this.width / 2 - 1 + Math.random() * 2;
-	      this.refs["gate"].y -= 1;
-	    }
-	  } else {
-	    if (this.refs["gate"] && this.refs["gate"].y <= 16) {
-	      this.refs["gate"].x = this.width / 2 - 1 + Math.random() * 2;
-	      this.refs["gate"].y += 1;
-	    }
-	  }
-	}
-
-	function checkIfPlayerIsAtGoal() {
-	  if (this.isATouchingB(this.refs[AVO.REF.PLAYER], this.refs["goal"])) {
-	    this.store.level && this.store.level++;
-
-	    switch (this.store.level) {
-	      case 1:
-	        startLevel1.apply(this);
-	        break;
-	      case 2:
-	        startLevel2.apply(this);
-	        break;
-	      case 3:
-	        startLevel3.apply(this);
-	        break;
-	      default:
-	        this.changeState(AVO.STATE_END);
-	    }
-	  }
 	}
 
 /***/ }
