@@ -257,16 +257,6 @@ function startLevelInit() {
   this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_NORTH;
   this.actors.push(this.refs[AVO.REF.PLAYER]);
   
-  let wallN = new Actor("wallN", midX, midY - 672, this.width, AVO.SHAPE_SQUARE);
-  let wallS = new Actor("wallS", midX, midY + 688, this.width, AVO.SHAPE_SQUARE);
-  let wallE = new Actor("wallE", midX + 688, midY, this.height, AVO.SHAPE_SQUARE);
-  let wallW = new Actor("wallW", midX - 688, midY, this.height, AVO.SHAPE_SQUARE);
-  wallE.canBeMoved = false;
-  wallS.canBeMoved = false;
-  wallW.canBeMoved = false;
-  wallN.canBeMoved = false;
-  this.actors.push(wallE, wallS, wallW, wallN);
-
   this.refs["gate"] = new Actor("gate", midX, 16, 128, AVO.SHAPE_SQUARE);
   this.refs["gate"].canBeMoved = false;
   this.refs["gate"].spritesheet = this.assets.images.gate;

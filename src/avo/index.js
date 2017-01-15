@@ -17,7 +17,10 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
   constructor(startScript) {
     //Initialise properties
     //--------------------------------
-    this.debugMode = true;
+    this.appConfig = {
+      debugMode: true,
+      topdownView: true,
+    };
     this.runCycle = null;
     this.html = document.getElementById("app");
     this.canvas = document.getElementById("canvas");
@@ -314,15 +317,6 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     this.physics();
     //--------------------------------
     
-    //Visuals
-    //--------------------------------
-    //Arrange sprites by vertical order.
-    this.actors.sort((a, b) => {
-      return a.bottom - b.bottom;
-    });
-    //this.paint();  //moved to run()
-    //--------------------------------
-    
     //Cleanup AoEs
     //--------------------------------
     for (let i = this.areasOfEffect.length - 1; i >= 0; i--) {
@@ -599,9 +593,18 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
   }
   
   paint_action() {
+    //Arrange sprites by vertical order.
+    //--------------------------------
+    if (this.appConfig.topdownView) {
+      this.actors.sort((a, b) => {
+        return a.bottom - b.bottom;
+      });
+    }
+    //--------------------------------
+    
     //DEBUG: Paint hitboxes
     //--------------------------------
-    if (this.debugMode) {
+    if (this.appConfig.debugMode) {
       //Areas of Effects
       for (let aoe of this.areasOfEffect) {
         let durationPercentage = 1;
@@ -671,7 +674,7 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     
     //DEBUG: Paint touch/mouse input
     //--------------------------------
-    if (this.debugMode) {      
+    if (this.appConfig.debugMode) {      
       this.context2d.strokeStyle = "rgba(128,128,128,0.8)";
       this.context2d.beginPath();
       this.context2d.arc(this.pointer.start.x, this.pointer.start.y, AVO.INPUT_DISTANCE_SENSITIVITY * 2, 0, 2 * Math.PI);

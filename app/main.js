@@ -111,7 +111,10 @@
 
 	    //Initialise properties
 	    //--------------------------------
-	    this.debugMode = true;
+	    this.appConfig = {
+	      debugMode: true,
+	      topdownView: true
+	    };
 	    this.runCycle = null;
 	    this.html = document.getElementById("app");
 	    this.canvas = document.getElementById("canvas");
@@ -514,15 +517,6 @@
 	      this.physics();
 	      //--------------------------------
 
-	      //Visuals
-	      //--------------------------------
-	      //Arrange sprites by vertical order.
-	      this.actors.sort(function (a, b) {
-	        return a.bottom - b.bottom;
-	      });
-	      //this.paint();  //moved to run()
-	      //--------------------------------
-
 	      //Cleanup AoEs
 	      //--------------------------------
 	      for (var i = this.areasOfEffect.length - 1; i >= 0; i--) {
@@ -812,9 +806,18 @@
 	  }, {
 	    key: "paint_action",
 	    value: function paint_action() {
+	      //Arrange sprites by vertical order.
+	      //--------------------------------
+	      if (this.appConfig.topdownView) {
+	        this.actors.sort(function (a, b) {
+	          return a.bottom - b.bottom;
+	        });
+	      }
+	      //--------------------------------
+
 	      //DEBUG: Paint hitboxes
 	      //--------------------------------
-	      if (this.debugMode) {
+	      if (this.appConfig.debugMode) {
 	        //Areas of Effects
 	        var _iteratorNormalCompletion7 = true;
 	        var _didIteratorError7 = false;
@@ -971,7 +974,7 @@
 	        }
 	      }
 
-	      if (this.debugMode) {
+	      if (this.appConfig.debugMode) {
 	        this.context2d.strokeStyle = "rgba(128,128,128,0.8)";
 	        this.context2d.beginPath();
 	        this.context2d.arc(this.pointer.start.x, this.pointer.start.y, AVO.INPUT_DISTANCE_SENSITIVITY * 2, 0, 2 * Math.PI);
@@ -2065,16 +2068,6 @@
 	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 4;
 	  this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_NORTH;
 	  this.actors.push(this.refs[AVO.REF.PLAYER]);
-
-	  var wallN = new _entities.Actor("wallN", midX, midY - 672, this.width, AVO.SHAPE_SQUARE);
-	  var wallS = new _entities.Actor("wallS", midX, midY + 688, this.width, AVO.SHAPE_SQUARE);
-	  var wallE = new _entities.Actor("wallE", midX + 688, midY, this.height, AVO.SHAPE_SQUARE);
-	  var wallW = new _entities.Actor("wallW", midX - 688, midY, this.height, AVO.SHAPE_SQUARE);
-	  wallE.canBeMoved = false;
-	  wallS.canBeMoved = false;
-	  wallW.canBeMoved = false;
-	  wallN.canBeMoved = false;
-	  this.actors.push(wallE, wallS, wallW, wallN);
 
 	  this.refs["gate"] = new _entities.Actor("gate", midX, 16, 128, AVO.SHAPE_SQUARE);
 	  this.refs["gate"].canBeMoved = false;
