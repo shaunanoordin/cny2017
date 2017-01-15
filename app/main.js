@@ -1833,19 +1833,19 @@
 
 	  //Images
 	  //--------------------------------
-	  this.assets.images.actor = new _utility.ImageAsset("assets/example-game/actor.png");
-	  this.assets.images.sarcophagus = new _utility.ImageAsset("assets/example-game/sarcophagus.png");
-	  this.assets.images.gate = new _utility.ImageAsset("assets/example-game/gate.png");
-	  this.assets.images.plate = new _utility.ImageAsset("assets/example-game/plate.png");
-	  this.assets.images.goal = new _utility.ImageAsset("assets/example-game/goal.png");
-	  this.assets.images.background = new _utility.ImageAsset("assets/example-game/background.png");
+	  this.assets.images.actor = new _utility.ImageAsset("assets/cny2017/actor.png");
+	  this.assets.images.sarcophagus = new _utility.ImageAsset("assets/cny2017/sarcophagus.png");
+	  this.assets.images.gate = new _utility.ImageAsset("assets/cny2017/gate.png");
+	  this.assets.images.plate = new _utility.ImageAsset("assets/cny2017/plate.png");
+	  this.assets.images.goal = new _utility.ImageAsset("assets/cny2017/goal.png");
+	  this.assets.images.background = new _utility.ImageAsset("assets/cny2017/background.png");
 
-	  this.assets.images.comicPanelA = new _utility.ImageAsset("assets/example-game/comic-panel-800x600-red.png");
-	  this.assets.images.comicPanelB = new _utility.ImageAsset("assets/example-game/comic-panel-800x600-blue.png");
-	  this.assets.images.comicPanelC = new _utility.ImageAsset("assets/example-game/comic-panel-800x600-yellow.png");
-	  this.assets.images.comicPanelSmall = new _utility.ImageAsset("assets/example-game/comic-panel-500x500-green.png");
-	  this.assets.images.comicPanelBig = new _utility.ImageAsset("assets/example-game/comic-panel-1000x1000-pink.png");
-	  this.assets.images.comicPanelWide = new _utility.ImageAsset("assets/example-game/comic-panel-1000x300-teal.png");
+	  this.assets.images.comicPanelA = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-red.png");
+	  this.assets.images.comicPanelB = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-blue.png");
+	  this.assets.images.comicPanelC = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-yellow.png");
+	  this.assets.images.comicPanelSmall = new _utility.ImageAsset("assets/cny2017/comic-panel-500x500-green.png");
+	  this.assets.images.comicPanelBig = new _utility.ImageAsset("assets/cny2017/comic-panel-1000x1000-pink.png");
+	  this.assets.images.comicPanelWide = new _utility.ImageAsset("assets/cny2017/comic-panel-1000x300-teal.png");
 	  //--------------------------------
 
 	  //Animations
