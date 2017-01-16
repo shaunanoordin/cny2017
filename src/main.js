@@ -7,7 +7,7 @@ AvO Adventure Game
  */
 
 import { AvO } from "./avo/index.js";
-import { initialise } from "./example-game/index.js";
+import { initialise } from "./cny2017/index.js";
  
 /*  Initialisations
  */
