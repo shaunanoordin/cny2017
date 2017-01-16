@@ -1994,11 +1994,17 @@
 	function prePaint() {
 	  if (this.state !== AVO.STATE_ACTION) return;
 
+	  if (this.store.bgFlip === undefined) this.store.bgFlip = false;
+	  if (!this.store.prevBGOffset) this.store.prevBGOffset = 0;
+
 	  var backgroundOffset = Math.floor(this.store.distance * 1 % this.canvasWidth);
 
-	  this.context2d.fillStyle = "#069";
+	  if (this.store.prevBGOffset > backgroundOffset) this.store.bgFlip = !this.store.bgFlip;
+	  this.store.prevBGOffset = backgroundOffset;
+
+	  this.context2d.fillStyle = this.store.bgFlip ? "#069" : "#39c";
 	  this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
-	  this.context2d.fillStyle = "#39c";
+	  this.context2d.fillStyle = this.store.bgFlip ? "#39c" : "#069";
 	  this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
 	}
 
@@ -2018,9 +2024,9 @@
 	  this.context2d.textAlign = "center";
 	  this.context2d.textBaseline = "middle";
 	  this.context2d.fillStyle = "#000";
-	  this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.8);
+	  this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.90);
 	  this.context2d.closePath();
-	  this.context2d.fillText(this.store.distance, this.canvasWidth * 0.5, this.canvasHeight * 0.9);
+	  this.context2d.fillText(Math.floor(this.store.distance / 50) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
 	  this.context2d.closePath();
 	}
 
