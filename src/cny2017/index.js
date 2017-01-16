@@ -16,16 +16,17 @@ import { ImageAsset } from "../avo/utility.js";
 export function initialise() {
   //Scripts
   //--------------------------------
-  this.scripts.runStart = runStart;
-  this.scripts.runAction = runAction;
-  this.scripts.runEnd = runEnd;
+  this.scripts.customRunStart = runStart;
+  this.scripts.customRunAction = runAction;
+  this.scripts.customRunEnd = runEnd;
+  this.scripts.prePaint = prePaint;
+  this.scripts.postPaint = postPaint;
   //--------------------------------
   
   //Images
   //--------------------------------
   this.assets.images.actor = new ImageAsset("assets/cny2017/actor.png");
   this.assets.images.sarcophagus = new ImageAsset("assets/cny2017/sarcophagus.png");
-  
   this.assets.images.comicPanelA = new ImageAsset("assets/cny2017/comic-panel-800x600-red.png");
   //--------------------------------
   
@@ -140,6 +141,8 @@ function runAction() {
   if (this.refs[AVO.REF.PLAYER].y < 0) this.refs[AVO.REF.PLAYER].y = 0;
   if (this.refs[AVO.REF.PLAYER].x > this.canvasWidth) this.refs[AVO.REF.PLAYER].x = this.canvasWidth;
   if (this.refs[AVO.REF.PLAYER].y > this.canvasHeight) this.refs[AVO.REF.PLAYER].y = this.canvasHeight;
+  
+  this.store.time++;
 }
 
 function initialiseLevel() {
@@ -147,6 +150,14 @@ function initialiseLevel() {
   this.actors = [];
   this.areasOfEffect = [];
   this.refs = {};
+  this.store = {
+    distance: 0,
+    TARGET_DISTANCE: 10000000,
+    flyingSpeed: 0,
+    FLYING_SPEED_MIN: 2,
+    FLYING_SPEED_MAX: 16,
+    time: 0,
+  };
   
   const midX = this.canvasWidth / 2, midY = this.canvasHeight / 2;
   
@@ -156,4 +167,27 @@ function initialiseLevel() {
   this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
   this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
   this.actors.push(this.refs[AVO.REF.PLAYER]);
+}
+
+function prePaint() {
+  if (this.state !== AVO.STATE_ACTION) return;
+  
+}
+
+function postPaint() {
+  if (this.state !== AVO.STATE_ACTION) return;
+  
+  const distanceLeft = this.store.TARGET_DISTANCE - this.store.distance;
+  const time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
+  let miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
+  while (miliseconds.length < 3) { miliseconds = "0" + miliseconds; }
+  let seconds = time % 60; seconds = (seconds >= 10) ? seconds : "0" + seconds;
+  let minutes = Math.floor(time / 60); minutes = (minutes >= 10) ? minutes : "0" + minutes;
+  
+  this.context2d.font = AVO.DEFAULT_FONT;
+  this.context2d.textAlign = "center";
+  this.context2d.textBaseline = "middle";
+  this.context2d.fillStyle = "#000";
+  this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.8); 
+  this.context2d.closePath();
 }

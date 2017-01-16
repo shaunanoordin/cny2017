@@ -112,8 +112,11 @@
 	    //Initialise properties
 	    //--------------------------------
 	    this.appConfig = {
+	      framesPerSecond: AVO.FRAMES_PER_SECOND,
 	      debugMode: true,
-	      topdownView: true
+	      topdownView: true,
+	      skipCoreRun: false,
+	      skipCorePaint: false
 	    };
 	    this.runCycle = null;
 	    this.html = {
@@ -138,20 +141,20 @@
 	    this.assetsLoaded = 0;
 	    this.assetsTotal = 0;
 	    this.scripts = {
-	      run: null,
-	      runStart: null,
-	      runAction: null,
-	      runComic: null,
-	      runEnd: null
+	      preRun: null,
+	      postRun: null,
+	      customRunStart: null,
+	      customRunAction: null,
+	      customRunComic: null,
+	      customRunEnd: null,
+	      prePaint: null,
+	      postPaint: null
 	    };
 	    this.actors = [];
 	    this.areasOfEffect = [];
 	    this.refs = {};
 	    this.store = {};
-	    this.ui = {
-	      foregroundImage: null,
-	      backgroundImage: null
-	    };
+	    //this.ui = {};
 	    this.comicStrip = null;
 	    //--------------------------------
 
@@ -198,7 +201,7 @@
 	    //Start!
 	    //--------------------------------
 	    this.changeState(AVO.STATE_START, startScript);
-	    this.runCycle = setInterval(this.run.bind(this), 1000 / AVO.FRAMES_PER_SECOND);
+	    this.runCycle = setInterval(this.run.bind(this), 1000 / this.appConfig.framesPerSecond);
 	    //--------------------------------
 	  }
 
@@ -217,22 +220,26 @@
 	  }, {
 	    key: "run",
 	    value: function run() {
-	      if (this.scripts.run) this.scripts.run.apply(this);
+	      if (this.scripts.preRun) this.scripts.preRun.apply(this);
 
-	      switch (this.state) {
-	        case AVO.STATE_START:
-	          this.run_start();
-	          break;
-	        case AVO.STATE_END:
-	          this.run_end();
-	          break;
-	        case AVO.STATE_ACTION:
-	          this.run_action();
-	          break;
-	        case AVO.STATE_COMIC:
-	          this.run_comic();
-	          break;
+	      if (!this.appConfig.skipCoreRun) {
+	        switch (this.state) {
+	          case AVO.STATE_START:
+	            this.run_start();
+	            break;
+	          case AVO.STATE_END:
+	            this.run_end();
+	            break;
+	          case AVO.STATE_ACTION:
+	            this.run_action();
+	            break;
+	          case AVO.STATE_COMIC:
+	            this.run_comic();
+	            break;
+	        }
 	      }
+
+	      if (this.scripts.postRun) this.scripts.postRun.apply(this);
 
 	      this.paint();
 	    }
@@ -249,19 +256,19 @@
 	      }
 	      if (this.assetsLoaded < this.assetsTotal) return;
 
-	      if (this.scripts.runStart) this.scripts.runStart.apply(this);
+	      if (this.scripts.customRunStart) this.scripts.customRunStart.apply(this);
 	    }
 	  }, {
 	    key: "run_end",
 	    value: function run_end() {
-	      if (this.scripts.runEnd) this.scripts.runEnd.apply(this);
+	      if (this.scripts.customRunEnd) this.scripts.customRunEnd.apply(this);
 	    }
 	  }, {
 	    key: "run_action",
 	    value: function run_action() {
 	      //Run Global Scripts
 	      //--------------------------------
-	      if (this.scripts.runAction) this.scripts.runAction.apply(this);
+	      if (this.scripts.customRunAction) this.scripts.customRunAction.apply(this);
 	      //--------------------------------
 
 	      //Actors determine intent
@@ -587,7 +594,7 @@
 	  }, {
 	    key: "run_comic",
 	    value: function run_comic() {
-	      if (this.scripts.runComic) this.scripts.runComic.apply(this);
+	      if (this.scripts.customRunComic) this.scripts.customRunComic.apply(this);
 
 	      if (!this.comicStrip) return;
 	      var comic = this.comicStrip;
@@ -743,30 +750,26 @@
 	      //Clear
 	      this.context2d.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
-	      if (this.ui.backgroundImage && this.ui.backgroundImage.loaded) {
-	        var image = this.ui.backgroundImage;
-	        this.context2d.drawImage(image.img, (this.canvasWidth - image.img.width) / 2, (this.canvasHeight - image.img.height) / 2);
+	      if (this.scripts.prePaint) this.scripts.prePaint.apply(this);
+
+	      if (!this.appConfig.skipCorePaint) {
+	        switch (this.state) {
+	          case AVO.STATE_START:
+	            this.paint_start();
+	            break;
+	          case AVO.STATE_END:
+	            this.paint_end();
+	            break;
+	          case AVO.STATE_ACTION:
+	            this.paint_action();
+	            break;
+	          case AVO.STATE_COMIC:
+	            this.paint_comic();
+	            break;
+	        }
 	      }
 
-	      switch (this.state) {
-	        case AVO.STATE_START:
-	          this.paint_start();
-	          break;
-	        case AVO.STATE_END:
-	          this.paint_end();
-	          break;
-	        case AVO.STATE_ACTION:
-	          this.paint_action();
-	          break;
-	        case AVO.STATE_COMIC:
-	          this.paint_comic();
-	          break;
-	      }
-
-	      if (this.ui.foregroundImage && this.ui.foregroundImage.loaded) {
-	        var _image = this.ui.foregroundImage;
-	        this.context2d.drawImage(_image.img, (this.canvasWidth - _image.img.width) / 2, (this.canvasHeight - _image.img.height) / 2);
-	      }
+	      if (this.scripts.postPaint) this.scripts.postPaint.apply(this);
 	    }
 	  }, {
 	    key: "paint_start",
@@ -1830,16 +1833,17 @@
 	function initialise() {
 	  //Scripts
 	  //--------------------------------
-	  this.scripts.runStart = runStart;
-	  this.scripts.runAction = runAction;
-	  this.scripts.runEnd = runEnd;
+	  this.scripts.customRunStart = runStart;
+	  this.scripts.customRunAction = runAction;
+	  this.scripts.customRunEnd = runEnd;
+	  this.scripts.prePaint = prePaint;
+	  this.scripts.postPaint = postPaint;
 	  //--------------------------------
 
 	  //Images
 	  //--------------------------------
 	  this.assets.images.actor = new _utility.ImageAsset("assets/cny2017/actor.png");
 	  this.assets.images.sarcophagus = new _utility.ImageAsset("assets/cny2017/sarcophagus.png");
-
 	  this.assets.images.comicPanelA = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-red.png");
 	  //--------------------------------
 
@@ -1956,6 +1960,8 @@
 	  if (this.refs[AVO.REF.PLAYER].y < 0) this.refs[AVO.REF.PLAYER].y = 0;
 	  if (this.refs[AVO.REF.PLAYER].x > this.canvasWidth) this.refs[AVO.REF.PLAYER].x = this.canvasWidth;
 	  if (this.refs[AVO.REF.PLAYER].y > this.canvasHeight) this.refs[AVO.REF.PLAYER].y = this.canvasHeight;
+
+	  this.store.time++;
 	}
 
 	function initialiseLevel() {
@@ -1963,6 +1969,14 @@
 	  this.actors = [];
 	  this.areasOfEffect = [];
 	  this.refs = {};
+	  this.store = {
+	    distance: 0,
+	    TARGET_DISTANCE: 10000000,
+	    flyingSpeed: 0,
+	    FLYING_SPEED_MIN: 2,
+	    FLYING_SPEED_MAX: 16,
+	    time: 0
+	  };
 
 	  var midX = this.canvasWidth / 2,
 	      midY = this.canvasHeight / 2;
@@ -1973,6 +1987,30 @@
 	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
 	  this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
 	  this.actors.push(this.refs[AVO.REF.PLAYER]);
+	}
+
+	function prePaint() {
+	  if (this.state !== AVO.STATE_ACTION) return;
+	}
+
+	function postPaint() {
+	  if (this.state !== AVO.STATE_ACTION) return;
+
+	  var distanceLeft = this.store.TARGET_DISTANCE - this.store.distance;
+	  var time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
+	  var miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
+	  while (miliseconds.length < 3) {
+	    miliseconds = "0" + miliseconds;
+	  }
+	  var seconds = time % 60;seconds = seconds >= 10 ? seconds : "0" + seconds;
+	  var minutes = Math.floor(time / 60);minutes = minutes >= 10 ? minutes : "0" + minutes;
+
+	  this.context2d.font = AVO.DEFAULT_FONT;
+	  this.context2d.textAlign = "center";
+	  this.context2d.textBaseline = "middle";
+	  this.context2d.fillStyle = "#000";
+	  this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.8);
+	  this.context2d.closePath();
 	}
 
 /***/ }

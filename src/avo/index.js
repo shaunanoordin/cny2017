@@ -18,8 +18,11 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     //Initialise properties
     //--------------------------------
     this.appConfig = {
+      framesPerSecond: AVO.FRAMES_PER_SECOND,
       debugMode: true,
       topdownView: true,
+      skipCoreRun: false,
+      skipCorePaint: false,
     };
     this.runCycle = null;
     this.html = {
@@ -44,20 +47,20 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     this.assetsLoaded = 0;
     this.assetsTotal = 0;
     this.scripts = {
-      run: null,
-      runStart: null,
-      runAction: null,
-      runComic: null,
-      runEnd: null,
+      preRun: null,
+      postRun: null,
+      customRunStart: null,
+      customRunAction: null,
+      customRunComic: null,
+      customRunEnd: null,
+      prePaint: null,
+      postPaint: null,
     };
     this.actors = [];
     this.areasOfEffect = [];
     this.refs = {};
     this.store = {};
-    this.ui = {
-      foregroundImage: null,
-      backgroundImage: null,
-    };
+    //this.ui = {};
     this.comicStrip = null;
     //--------------------------------
     
@@ -106,7 +109,7 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     //Start!
     //--------------------------------
     this.changeState(AVO.STATE_START, startScript);
-    this.runCycle = setInterval(this.run.bind(this), 1000 / AVO.FRAMES_PER_SECOND);
+    this.runCycle = setInterval(this.run.bind(this), 1000 / this.appConfig.framesPerSecond);
     //--------------------------------
   }
   
@@ -120,22 +123,26 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
   }
   
   run() {
-    if (this.scripts.run) this.scripts.run.apply(this);
+    if (this.scripts.preRun) this.scripts.preRun.apply(this);
     
-    switch (this.state) {
-      case AVO.STATE_START:
-        this.run_start();
-        break;
-      case AVO.STATE_END:
-        this.run_end();
-        break;
-      case AVO.STATE_ACTION:
-        this.run_action();
-        break;
-      case AVO.STATE_COMIC:
-        this.run_comic();
-        break;
+    if (!this.appConfig.skipCoreRun) {
+      switch (this.state) {
+        case AVO.STATE_START:
+          this.run_start();
+          break;
+        case AVO.STATE_END:
+          this.run_end();
+          break;
+        case AVO.STATE_ACTION:
+          this.run_action();
+          break;
+        case AVO.STATE_COMIC:
+          this.run_comic();
+          break;
+      }
     }
+    
+    if (this.scripts.postRun) this.scripts.postRun.apply(this);
     
     this.paint();
   }
@@ -151,17 +158,17 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     }
     if (this.assetsLoaded < this.assetsTotal) return;
     
-    if (this.scripts.runStart) this.scripts.runStart.apply(this);
+    if (this.scripts.customRunStart) this.scripts.customRunStart.apply(this);
   }
   
   run_end() {
-    if (this.scripts.runEnd) this.scripts.runEnd.apply(this);
+    if (this.scripts.customRunEnd) this.scripts.customRunEnd.apply(this);
   }
     
   run_action() {
     //Run Global Scripts
     //--------------------------------
-    if (this.scripts.runAction) this.scripts.runAction.apply(this);
+    if (this.scripts.customRunAction) this.scripts.customRunAction.apply(this);
     //--------------------------------
     
     //Actors determine intent
@@ -364,7 +371,7 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
   }
   
   run_comic() {
-    if (this.scripts.runComic) this.scripts.runComic.apply(this);
+    if (this.scripts.customRunComic) this.scripts.customRunComic.apply(this);
     
     if (!this.comicStrip) return;
     const comic = this.comicStrip;
@@ -533,30 +540,26 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     //Clear
     this.context2d.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
     
-    if (this.ui.backgroundImage && this.ui.backgroundImage.loaded) {
-      const image = this.ui.backgroundImage;
-      this.context2d.drawImage(image.img, (this.canvasWidth - image.img.width) / 2, (this.canvasHeight - image.img.height) / 2);
+    if (this.scripts.prePaint) this.scripts.prePaint.apply(this);
+    
+    if (!this.appConfig.skipCorePaint) {
+      switch (this.state) {
+        case AVO.STATE_START:
+          this.paint_start();
+          break;
+        case AVO.STATE_END:
+          this.paint_end();
+          break;
+        case AVO.STATE_ACTION:
+          this.paint_action();
+          break;
+        case AVO.STATE_COMIC:
+          this.paint_comic();
+          break;
+      }
     }
     
-    switch (this.state) {
-      case AVO.STATE_START:
-        this.paint_start();
-        break;
-      case AVO.STATE_END:
-        this.paint_end();
-        break;
-      case AVO.STATE_ACTION:
-        this.paint_action();
-        break;
-      case AVO.STATE_COMIC:
-        this.paint_comic();
-        break;
-    }
-    
-    if (this.ui.foregroundImage && this.ui.foregroundImage.loaded) {
-      const image = this.ui.foregroundImage;
-      this.context2d.drawImage(image.img, (this.canvasWidth - image.img.width) / 2, (this.canvasHeight - image.img.height) / 2);
-    }
+    if (this.scripts.postPaint) this.scripts.postPaint.apply(this);
   }
   
   paint_start() {
