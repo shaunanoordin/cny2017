@@ -1984,8 +1984,8 @@
 	      midY = this.canvasHeight / 2;
 
 	  this.refs[AVO.REF.PLAYER] = new _entities.Actor(AVO.REF.PLAYER, midX / 2, midY, 32, AVO.SHAPE_CIRCLE);
-	  this.refs[AVO.REF.PLAYER].spritesheet = this.assets.images.actor;
-	  this.refs[AVO.REF.PLAYER].animationSet = this.animationSets.actor;
+	  //this.refs[AVO.REF.PLAYER].spritesheet = this.assets.images.actor;
+	  //this.refs[AVO.REF.PLAYER].animationSet = this.animationSets.actor;
 	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
 	  this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
 	  this.actors.push(this.refs[AVO.REF.PLAYER]);
