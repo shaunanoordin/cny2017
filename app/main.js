@@ -1961,7 +1961,9 @@
 	  if (this.refs[AVO.REF.PLAYER].x > this.canvasWidth) this.refs[AVO.REF.PLAYER].x = this.canvasWidth;
 	  if (this.refs[AVO.REF.PLAYER].y > this.canvasHeight) this.refs[AVO.REF.PLAYER].y = this.canvasHeight;
 
+	  this.store.flyingSpeed = Math.floor(this.refs[AVO.REF.PLAYER].x / this.canvasWidth * (this.store.FLYING_SPEED_MAX - this.store.FLYING_SPEED_MIN) + this.store.FLYING_SPEED_MIN);
 	  this.store.time++;
+	  this.store.distance += this.store.flyingSpeed;
 	}
 
 	function initialiseLevel() {
@@ -1981,7 +1983,7 @@
 	  var midX = this.canvasWidth / 2,
 	      midY = this.canvasHeight / 2;
 
-	  this.refs[AVO.REF.PLAYER] = new _entities.Actor(AVO.REF.PLAYER, midX, midY, 32, AVO.SHAPE_CIRCLE);
+	  this.refs[AVO.REF.PLAYER] = new _entities.Actor(AVO.REF.PLAYER, midX / 2, midY, 32, AVO.SHAPE_CIRCLE);
 	  this.refs[AVO.REF.PLAYER].spritesheet = this.assets.images.actor;
 	  this.refs[AVO.REF.PLAYER].animationSet = this.animationSets.actor;
 	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
@@ -1991,6 +1993,13 @@
 
 	function prePaint() {
 	  if (this.state !== AVO.STATE_ACTION) return;
+
+	  var backgroundOffset = Math.floor(this.store.distance * 1 % this.canvasWidth);
+
+	  this.context2d.fillStyle = "#069";
+	  this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
+	  this.context2d.fillStyle = "#39c";
+	  this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
 	}
 
 	function postPaint() {
@@ -2010,6 +2019,8 @@
 	  this.context2d.textBaseline = "middle";
 	  this.context2d.fillStyle = "#000";
 	  this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.8);
+	  this.context2d.closePath();
+	  this.context2d.fillText(this.store.distance, this.canvasWidth * 0.5, this.canvasHeight * 0.9);
 	  this.context2d.closePath();
 	}
 
