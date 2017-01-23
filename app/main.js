@@ -1844,7 +1844,9 @@
 	  //--------------------------------
 	  this.assets.images.actor = new _utility.ImageAsset("assets/cny2017/actor.png");
 	  this.assets.images.sarcophagus = new _utility.ImageAsset("assets/cny2017/sarcophagus.png");
-	  this.assets.images.comicPanelA = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-red.png");
+	  this.assets.images.comicIntro = new _utility.ImageAsset("assets/cny2017/comic-intro.png");
+	  this.assets.images.comicWin = new _utility.ImageAsset("assets/cny2017/comic-win.png");
+	  this.assets.images.comicLose = new _utility.ImageAsset("assets/cny2017/comic-lose.png");
 	  //--------------------------------
 
 	  //Animations
@@ -1928,29 +1930,31 @@
 	}
 
 	function runStart() {
-	  /*if (this.pointer.state === AVO.INPUT_ACTIVE || 
-	      this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
-	    this.changeState(AVO.STATE_COMIC, comicStart);
-	  }*/
-
-	  this.changeState(AVO.STATE_COMIC, comicStart);
+	  this.changeState(AVO.STATE_COMIC, playIntroComic);
 	}
 
-	function comicStart() {
-	  this.comicStrip = new _index.ComicStrip("startcomic", [//this.assets.images.comicPanelA,
-	    //this.assets.images.comicPanelB,
-	    //this.assets.images.comicPanelC,
-	  ], comicStartFinished);
-	  this.comicStrip.start();
+	function playIntroComic() {
+	  this.comicStrip = new _index.ComicStrip("introcomic", [this.assets.images.comicIntro], finishIntroComic);
 	}
 
-	function comicStartFinished() {
+	function finishIntroComic() {
 	  this.changeState(AVO.STATE_ACTION, initialiseLevel);
+	}
+
+	function playWinComic() {
+	  this.comicStrip = new _index.ComicStrip("win_comic", [this.assets.images.comicWin], finishIntroComic);
+	}
+
+	function finishWinComic() {
+	  this.changeState(AVO.STATE_COMIC, playIntroComic);
+	}
+
+	function playLoseComic() {
+	  this.comicStrip = new _index.ComicStrip("lose_comic", [this.assets.images.comicLose], finishIntroComic);
+	}
+
+	function finishLoseComic() {
+	  this.changeState(AVO.STATE_COMIC, playIntroComic);
 	}
 
 	function runEnd() {}
@@ -1973,7 +1977,7 @@
 	  this.refs = {};
 	  this.store = {
 	    distance: 0,
-	    TARGET_DISTANCE: 10000000,
+	    TARGET_DISTANCE: 1000000,
 	    flyingSpeed: 0,
 	    FLYING_SPEED_MIN: 2,
 	    FLYING_SPEED_MAX: 16,
@@ -1992,42 +1996,44 @@
 	}
 
 	function prePaint() {
-	  if (this.state !== AVO.STATE_ACTION) return;
+	  if (this.state === AVO.STATE_ACTION) {
+	    //Paint the city background.
+	    if (this.store.bgFlip === undefined) this.store.bgFlip = false;
+	    if (!this.store.prevBGOffset) this.store.prevBGOffset = 0;
 
-	  if (this.store.bgFlip === undefined) this.store.bgFlip = false;
-	  if (!this.store.prevBGOffset) this.store.prevBGOffset = 0;
+	    var backgroundOffset = Math.floor(this.store.distance * 1 % this.canvasWidth);
 
-	  var backgroundOffset = Math.floor(this.store.distance * 1 % this.canvasWidth);
+	    if (this.store.prevBGOffset > backgroundOffset) this.store.bgFlip = !this.store.bgFlip;
+	    this.store.prevBGOffset = backgroundOffset;
 
-	  if (this.store.prevBGOffset > backgroundOffset) this.store.bgFlip = !this.store.bgFlip;
-	  this.store.prevBGOffset = backgroundOffset;
-
-	  this.context2d.fillStyle = this.store.bgFlip ? "#069" : "#39c";
-	  this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
-	  this.context2d.fillStyle = this.store.bgFlip ? "#39c" : "#069";
-	  this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
+	    this.context2d.fillStyle = this.store.bgFlip ? "#069" : "#39c";
+	    this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
+	    this.context2d.fillStyle = this.store.bgFlip ? "#39c" : "#069";
+	    this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
+	  }
 	}
 
 	function postPaint() {
-	  if (this.state !== AVO.STATE_ACTION) return;
+	  if (this.state === AVO.STATE_ACTION) {
+	    //Paint the UI: Time
+	    var time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
+	    var miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
+	    while (miliseconds.length < 3) {
+	      miliseconds = "0" + miliseconds;
+	    }
+	    var seconds = time % 60;seconds = seconds >= 10 ? seconds : "0" + seconds;
+	    var minutes = Math.floor(time / 60);minutes = minutes >= 10 ? minutes : "0" + minutes;
 
-	  var distanceLeft = this.store.TARGET_DISTANCE - this.store.distance;
-	  var time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
-	  var miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
-	  while (miliseconds.length < 3) {
-	    miliseconds = "0" + miliseconds;
+	    //Paint the UI: Distance to target
+	    this.context2d.font = AVO.DEFAULT_FONT;
+	    this.context2d.textAlign = "center";
+	    this.context2d.textBaseline = "middle";
+	    this.context2d.fillStyle = "#000";
+	    this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.90);
+	    this.context2d.closePath();
+	    this.context2d.fillText(Math.floor(this.store.distance / 50) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
+	    this.context2d.closePath();
 	  }
-	  var seconds = time % 60;seconds = seconds >= 10 ? seconds : "0" + seconds;
-	  var minutes = Math.floor(time / 60);minutes = minutes >= 10 ? minutes : "0" + minutes;
-
-	  this.context2d.font = AVO.DEFAULT_FONT;
-	  this.context2d.textAlign = "center";
-	  this.context2d.textBaseline = "middle";
-	  this.context2d.fillStyle = "#000";
-	  this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.90);
-	  this.context2d.closePath();
-	  this.context2d.fillText(Math.floor(this.store.distance / 50) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
-	  this.context2d.closePath();
 	}
 
 /***/ }
