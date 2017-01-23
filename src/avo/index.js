@@ -636,6 +636,8 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     //DEBUG: Paint hitboxes
     //--------------------------------
     if (this.appConfig.debugMode) {
+      this.context2d.lineWidth = 1;
+      
       //Areas of Effects
       for (let aoe of this.areasOfEffect) {
         let durationPercentage = 1;
@@ -707,6 +709,7 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     //--------------------------------
     if (this.appConfig.debugMode) {      
       this.context2d.strokeStyle = "rgba(128,128,128,0.8)";
+      this.context2d.lineWidth = 1;
       this.context2d.beginPath();
       this.context2d.arc(this.pointer.start.x, this.pointer.start.y, AVO.INPUT_DISTANCE_SENSITIVITY * 2, 0, 2 * Math.PI);
       this.context2d.stroke();

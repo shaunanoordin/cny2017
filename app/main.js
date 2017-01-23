@@ -849,6 +849,8 @@
 	      //DEBUG: Paint hitboxes
 	      //--------------------------------
 	      if (this.appConfig.debugMode) {
+	        this.context2d.lineWidth = 1;
+
 	        //Areas of Effects
 	        var _iteratorNormalCompletion7 = true;
 	        var _didIteratorError7 = false;
@@ -1007,6 +1009,7 @@
 
 	      if (this.appConfig.debugMode) {
 	        this.context2d.strokeStyle = "rgba(128,128,128,0.8)";
+	        this.context2d.lineWidth = 1;
 	        this.context2d.beginPath();
 	        this.context2d.arc(this.pointer.start.x, this.pointer.start.y, AVO.INPUT_DISTANCE_SENSITIVITY * 2, 0, 2 * Math.PI);
 	        this.context2d.stroke();
@@ -2000,6 +2003,11 @@
 	  this.store.flyingSpeed = Math.floor(this.refs[AVO.REF.PLAYER].x / this.canvasWidth * (this.store.FLYING_SPEED_MAX - this.store.FLYING_SPEED_MIN) + this.store.FLYING_SPEED_MIN);
 	  this.store.time++;
 	  this.store.distance += this.store.flyingSpeed;
+
+	  //Win condition?
+	  if (this.store.distance >= this.store.TARGET_DISTANCE) {
+	    this.changeState(AVO.STATE_COMIC, playWinComic);
+	  }
 	}
 
 	function initialiseLevel() {
@@ -2009,7 +2017,7 @@
 	  this.refs = {};
 	  this.store = {
 	    distance: 0,
-	    TARGET_DISTANCE: 1000000,
+	    TARGET_DISTANCE: 10000,
 	    flyingSpeed: 0,
 	    FLYING_SPEED_MIN: 2,
 	    FLYING_SPEED_MAX: 16,
@@ -2059,12 +2067,85 @@
 	    this.context2d.textAlign = "center";
 	    this.context2d.textBaseline = "middle";
 	    this.context2d.fillStyle = "#000";
-	    this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.90);
-	    this.context2d.closePath();
+	    this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.05);
 
 	    //Paint the UI: Distance to target
 	    this.context2d.fillText(Math.floor(this.store.distance / 50) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
+	    var distStartX = this.canvasWidth * 0.25;
+	    var distEndX = this.canvasWidth * 0.75;
+	    var distMidY = this.canvasHeight * 0.9;
+	    var distRadius = 16;
+	    this.context2d.fillStyle = "#fc3";
+	    this.context2d.strokeStyle = "#666";
+	    this.context2d.lineWidth = 3;
+	    this.context2d.beginPath();
+	    this.context2d.arc(distStartX, distMidY, distRadius, 0, 2 * Math.PI);
 	    this.context2d.closePath();
+	    this.context2d.stroke();
+	    this.context2d.beginPath();
+	    this.context2d.arc(distEndX, distMidY, distRadius, 0, 2 * Math.PI);
+	    this.context2d.closePath();
+	    this.context2d.stroke();
+	    this.context2d.beginPath();
+	    this.context2d.moveTo(distStartX + distRadius, distMidY);
+	    this.context2d.lineTo(distEndX - distRadius, distMidY);
+	    this.context2d.closePath();
+	    this.context2d.stroke();
+
+	    var currentX = this.store.distance / this.store.TARGET_DISTANCE * (distEndX - distStartX) + distStartX;
+	    this.context2d.beginPath();
+	    this.context2d.arc(currentX, distMidY, distRadius, 0, 2 * Math.PI);
+	    this.context2d.closePath();
+	    this.context2d.fill();
+
+	    //Paint the UI: Paint cursor
+	    if (this.pointer.state === AVO.INPUT_ACTIVE) {
+	      var player = this.refs[AVO.REF.PLAYER];
+
+	      this.context2d.fillStyle = "#633";
+	      this.context2d.strokeStyle = "#933";
+	      this.context2d.lineWidth = 2;
+	      this.context2d.beginPath();
+	      this.context2d.arc(this.pointer.start.x, this.pointer.start.y, AVO.INPUT_DISTANCE_SENSITIVITY * this.sizeRatioY * 2, 0, 2 * Math.PI);
+	      this.context2d.moveTo(this.pointer.start.x, this.pointer.start.y);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.beginPath();
+	      this.context2d.arc(this.pointer.now.x, this.pointer.now.y, AVO.INPUT_DISTANCE_SENSITIVITY * this.sizeRatioY * 2, 0, 2 * Math.PI);
+	      this.context2d.closePath();
+	      this.context2d.fill();
+
+	      this.context2d.beginPath();
+	      this.context2d.moveTo(this.pointer.start.x + 0, this.pointer.start.y + 48);
+	      this.context2d.lineTo(this.pointer.start.x + 16, this.pointer.start.y + 40);
+	      this.context2d.lineTo(this.pointer.start.x - 16, this.pointer.start.y + 40);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.beginPath();
+	      this.context2d.moveTo(this.pointer.start.x + 0, this.pointer.start.y - 48);
+	      this.context2d.lineTo(this.pointer.start.x + 16, this.pointer.start.y - 40);
+	      this.context2d.lineTo(this.pointer.start.x - 16, this.pointer.start.y - 40);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.beginPath();
+	      this.context2d.moveTo(this.pointer.start.x + 48, this.pointer.start.y + 0);
+	      this.context2d.lineTo(this.pointer.start.x + 40, this.pointer.start.y + 16);
+	      this.context2d.lineTo(this.pointer.start.x + 40, this.pointer.start.y - 16);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.beginPath();
+	      this.context2d.moveTo(this.pointer.start.x - 48, this.pointer.start.y + 0);
+	      this.context2d.lineTo(this.pointer.start.x - 40, this.pointer.start.y + 16);
+	      this.context2d.lineTo(this.pointer.start.x - 40, this.pointer.start.y - 16);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.stroke();
+	    }
 	  }
 	}
 
