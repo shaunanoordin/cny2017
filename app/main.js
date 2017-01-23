@@ -310,26 +310,52 @@
 	        }
 
 	        //Keyboard input
-	        if (this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.DOWN].state !== AVO.INPUT_ACTIVE) {
+	        var vDir = 0;
+	        var hDir = 0;
+	        if (this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE) vDir--;
+	        if (this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE) vDir++;
+	        if (this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE) hDir--;
+	        if (this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE) hDir++;
+
+	        if (vDir < 0 && hDir === 0) {
 	          player.intent = {
 	            name: AVO.ACTION.MOVE,
 	            angle: AVO.ROTATION_NORTH
 	          };
-	        } else if (this.keys[AVO.KEY_CODES.UP].state !== AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE) {
+	        } else if (vDir > 0 && hDir === 0) {
 	          player.intent = {
 	            name: AVO.ACTION.MOVE,
 	            angle: AVO.ROTATION_SOUTH
 	          };
-	        }
-	        if (this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.RIGHT].state !== AVO.INPUT_ACTIVE) {
+	        } else if (vDir === 0 && hDir < 0) {
 	          player.intent = {
 	            name: AVO.ACTION.MOVE,
 	            angle: AVO.ROTATION_WEST
 	          };
-	        } else if (this.keys[AVO.KEY_CODES.LEFT].state !== AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE) {
+	        } else if (vDir === 0 && hDir > 0) {
 	          player.intent = {
 	            name: AVO.ACTION.MOVE,
 	            angle: AVO.ROTATION_EAST
+	          };
+	        } else if (vDir > 0 && hDir > 0) {
+	          player.intent = {
+	            name: AVO.ACTION.MOVE,
+	            angle: AVO.ROTATION_SOUTHEAST
+	          };
+	        } else if (vDir > 0 && hDir < 0) {
+	          player.intent = {
+	            name: AVO.ACTION.MOVE,
+	            angle: AVO.ROTATION_SOUTHWEST
+	          };
+	        } else if (vDir < 0 && hDir < 0) {
+	          player.intent = {
+	            name: AVO.ACTION.MOVE,
+	            angle: AVO.ROTATION_NORTHWEST
+	          };
+	        } else if (vDir < 0 && hDir > 0) {
+	          player.intent = {
+	            name: AVO.ACTION.MOVE,
+	            angle: AVO.ROTATION_NORTHEAST
 	          };
 	        }
 
@@ -1255,9 +1281,14 @@
 	var SHAPE_CIRCLE = exports.SHAPE_CIRCLE = 2;
 
 	var ROTATION_EAST = exports.ROTATION_EAST = 0;
-	var ROTATION_SOUTH = exports.ROTATION_SOUTH = Math.PI / 2;
+	var ROTATION_SOUTH = exports.ROTATION_SOUTH = Math.PI * 0.5;
 	var ROTATION_WEST = exports.ROTATION_WEST = Math.PI;
-	var ROTATION_NORTH = exports.ROTATION_NORTH = -Math.PI / 2;
+	var ROTATION_NORTH = exports.ROTATION_NORTH = Math.PI * -0.5;
+
+	var ROTATION_SOUTHEAST = exports.ROTATION_SOUTHEAST = Math.PI * 0.25;
+	var ROTATION_SOUTHWEST = exports.ROTATION_SOUTHWEST = Math.PI * 0.75;
+	var ROTATION_NORTHWEST = exports.ROTATION_NORTHWEST = Math.PI * -0.75;
+	var ROTATION_NORTHEAST = exports.ROTATION_NORTHEAST = Math.PI * -0.25;
 
 	var DIRECTION_EAST = exports.DIRECTION_EAST = 0;
 	var DIRECTION_SOUTH = exports.DIRECTION_SOUTH = 1;
@@ -1930,7 +1961,8 @@
 	}
 
 	function runStart() {
-	  this.changeState(AVO.STATE_COMIC, playIntroComic);
+	  //this.changeState(AVO.STATE_COMIC, playIntroComic);
+	  this.changeState(AVO.STATE_ACTION, initialiseLevel);
 	}
 
 	function playIntroComic() {
@@ -2023,14 +2055,14 @@
 	    }
 	    var seconds = time % 60;seconds = seconds >= 10 ? seconds : "0" + seconds;
 	    var minutes = Math.floor(time / 60);minutes = minutes >= 10 ? minutes : "0" + minutes;
-
-	    //Paint the UI: Distance to target
 	    this.context2d.font = AVO.DEFAULT_FONT;
 	    this.context2d.textAlign = "center";
 	    this.context2d.textBaseline = "middle";
 	    this.context2d.fillStyle = "#000";
 	    this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.90);
 	    this.context2d.closePath();
+
+	    //Paint the UI: Distance to target
 	    this.context2d.fillText(Math.floor(this.store.distance / 50) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
 	    this.context2d.closePath();
 	  }

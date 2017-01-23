@@ -108,7 +108,8 @@ export function initialise() {
 }
 
 function runStart() {
-  this.changeState(AVO.STATE_COMIC, playIntroComic);
+  //this.changeState(AVO.STATE_COMIC, playIntroComic);
+  this.changeState(AVO.STATE_ACTION, initialiseLevel);
 }
 
 function playIntroComic() {
@@ -211,15 +212,17 @@ function postPaint() {
     while (miliseconds.length < 3) { miliseconds = "0" + miliseconds; }
     let seconds = time % 60; seconds = (seconds >= 10) ? seconds : "0" + seconds;
     let minutes = Math.floor(time / 60); minutes = (minutes >= 10) ? minutes : "0" + minutes;
-    
-    //Paint the UI: Distance to target
     this.context2d.font = AVO.DEFAULT_FONT;
     this.context2d.textAlign = "center";
     this.context2d.textBaseline = "middle";
     this.context2d.fillStyle = "#000";
     this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.90); 
     this.context2d.closePath();
+    
+    //Paint the UI: Distance to target
     this.context2d.fillText(Math.floor(this.store.distance / 50) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
     this.context2d.closePath();
+    
+    
   }
 }
