@@ -427,6 +427,9 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
       case AVO.COMIC_STRIP_STATE_IDLE:
         if (this.pointer.state === AVO.INPUT_ACTIVE || 
             this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE ||
+            this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE ||
+            this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE ||
+            this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE ||
             this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE ||
             this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
           comic.currentPanel++;
@@ -875,6 +878,9 @@ export class ComicStrip {
     this.waitTime = AVO.DEFAULT_COMIC_STRIP_WAIT_TIME_BEFORE_INPUT;
     this.transitionTime = AVO.DEFAULT_COMIC_STRIP_TRANSITION_TIME;    
     this.background = "#333";
+    
+    this.currentPanel = 0;
+    this.state = AVO.COMIC_STRIP_STATE_TRANSITIONING;
     
     this.start();
   }

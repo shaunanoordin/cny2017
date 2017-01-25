@@ -13,6 +13,8 @@ import { Actor, AoE, Effect } from "../avo/entities.js";
 import * as AVO from  "../avo/constants.js";
 import { ImageAsset } from "../avo/utility.js";
 
+const FIREWORK_MISSILE = "firework_missile";
+
 export function initialise() {
   //Scripts
   //--------------------------------
@@ -21,6 +23,7 @@ export function initialise() {
   this.scripts.customRunEnd = runEnd;
   this.scripts.prePaint = prePaint;
   this.scripts.postPaint = postPaint;
+  this.spawnRandomObstacle = spawnRandomObstacle.bind(this);
   //--------------------------------
   
   //Images
@@ -166,6 +169,21 @@ function runAction() {
     this.changeState(AVO.STATE_COMIC, playWinComic);
   }
   
+  this.actors.map((actor) => {
+    if (actor === this.refs[AVO.REF.PLAYER]) return;
+    
+    if (actor.name === FIREWORK_MISSILE) {
+      actor.y -= actor.attributes[AVO.ATTR.SPEED];
+    }
+    
+    actor.x -= this.store.flyingSpeed;
+    
+    if (this.isATouchingB(actor, this.refs[AVO.REF.PLAYER])) {
+      this.changeState(AVO.STATE_COMIC, playLoseComic);
+    }
+  });
+  
+  this.spawnRandomObstacle(1000);
 }
 
 function initialiseLevel() {
@@ -190,6 +208,17 @@ function initialiseLevel() {
   this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
   this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
   this.actors.push(this.refs[AVO.REF.PLAYER]);
+}
+
+function spawnRandomObstacle(n = 100) {
+  const r = Math.random() * n;
+  if (r < 50) {
+    const actor = new Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * 1.10), Math.floor(this.canvasHeight * (Math.random() * 0.5 + 1)), 32, AVO.SHAPE_CIRCLE);
+    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 8 + 4);
+    this.actors.push(actor);
+  }
+  
+  
 }
 
 function prePaint() {
@@ -301,5 +330,18 @@ function postPaint() {
       
       this.context2d.stroke();
     }
+  } else if (this.state === AVO.STATE_COMIC && this.comicStrip &&
+      this.comicStrip.currentPanel === 0 && this.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
+    //Paint the UI: Time
+    const time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
+    let miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
+    while (miliseconds.length < 3) { miliseconds = "0" + miliseconds; }
+    let seconds = time % 60; seconds = (seconds >= 10) ? seconds : "0" + seconds;
+    let minutes = Math.floor(time / 60); minutes = (minutes >= 10) ? minutes : "0" + minutes;
+    this.context2d.font = AVO.DEFAULT_FONT;
+    this.context2d.textAlign = "center";
+    this.context2d.textBaseline = "middle";
+    this.context2d.fillStyle = "#000";
+    this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.15);
   }
 }

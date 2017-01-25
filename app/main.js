@@ -647,7 +647,7 @@
 	          }
 	          break;
 	        case AVO.COMIC_STRIP_STATE_IDLE:
-	          if (this.pointer.state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
+	          if (this.pointer.state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
 	            comic.currentPanel++;
 	            comic.state = AVO.COMIC_STRIP_STATE_TRANSITIONING;
 	          }
@@ -1195,6 +1195,9 @@
 	    this.waitTime = AVO.DEFAULT_COMIC_STRIP_WAIT_TIME_BEFORE_INPUT;
 	    this.transitionTime = AVO.DEFAULT_COMIC_STRIP_TRANSITION_TIME;
 	    this.background = "#333";
+
+	    this.currentPanel = 0;
+	    this.state = AVO.COMIC_STRIP_STATE_TRANSITIONING;
 
 	    this.start();
 	  }
@@ -1864,6 +1867,8 @@
 	********************************************************************************
 	 */
 
+	var FIREWORK_MISSILE = "firework_missile";
+
 	function initialise() {
 	  //Scripts
 	  //--------------------------------
@@ -1872,6 +1877,7 @@
 	  this.scripts.customRunEnd = runEnd;
 	  this.scripts.prePaint = prePaint;
 	  this.scripts.postPaint = postPaint;
+	  this.spawnRandomObstacle = spawnRandomObstacle.bind(this);
 	  //--------------------------------
 
 	  //Images
@@ -1995,6 +2001,8 @@
 	function runEnd() {}
 
 	function runAction() {
+	  var _this = this;
+
 	  if (this.refs[AVO.REF.PLAYER].x < 0) this.refs[AVO.REF.PLAYER].x = 0;
 	  if (this.refs[AVO.REF.PLAYER].y < 0) this.refs[AVO.REF.PLAYER].y = 0;
 	  if (this.refs[AVO.REF.PLAYER].x > this.canvasWidth) this.refs[AVO.REF.PLAYER].x = this.canvasWidth;
@@ -2008,6 +2016,22 @@
 	  if (this.store.distance >= this.store.TARGET_DISTANCE) {
 	    this.changeState(AVO.STATE_COMIC, playWinComic);
 	  }
+
+	  this.actors.map(function (actor) {
+	    if (actor === _this.refs[AVO.REF.PLAYER]) return;
+
+	    if (actor.name === FIREWORK_MISSILE) {
+	      actor.y -= actor.attributes[AVO.ATTR.SPEED];
+	    }
+
+	    actor.x -= _this.store.flyingSpeed;
+
+	    if (_this.isATouchingB(actor, _this.refs[AVO.REF.PLAYER])) {
+	      _this.changeState(AVO.STATE_COMIC, playLoseComic);
+	    }
+	  });
+
+	  this.spawnRandomObstacle(1000);
 	}
 
 	function initialiseLevel() {
@@ -2033,6 +2057,17 @@
 	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
 	  this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
 	  this.actors.push(this.refs[AVO.REF.PLAYER]);
+	}
+
+	function spawnRandomObstacle() {
+	  var n = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 100;
+
+	  var r = Math.random() * n;
+	  if (r < 50) {
+	    var actor = new _entities.Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * 1.10), Math.floor(this.canvasHeight * (Math.random() * 0.5 + 1)), 32, AVO.SHAPE_CIRCLE);
+	    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 8 + 4);
+	    this.actors.push(actor);
+	  }
 	}
 
 	function prePaint() {
@@ -2146,6 +2181,20 @@
 
 	      this.context2d.stroke();
 	    }
+	  } else if (this.state === AVO.STATE_COMIC && this.comicStrip && this.comicStrip.currentPanel === 0 && this.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
+	    //Paint the UI: Time
+	    var _time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
+	    var _miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
+	    while (_miliseconds.length < 3) {
+	      _miliseconds = "0" + _miliseconds;
+	    }
+	    var _seconds = _time % 60;_seconds = _seconds >= 10 ? _seconds : "0" + _seconds;
+	    var _minutes = Math.floor(_time / 60);_minutes = _minutes >= 10 ? _minutes : "0" + _minutes;
+	    this.context2d.font = AVO.DEFAULT_FONT;
+	    this.context2d.textAlign = "center";
+	    this.context2d.textBaseline = "middle";
+	    this.context2d.fillStyle = "#000";
+	    this.context2d.fillText(_minutes + ":" + _seconds + "." + _miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.15);
 	  }
 	}
 
