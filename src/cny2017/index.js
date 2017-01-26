@@ -28,7 +28,7 @@ export function initialise() {
   
   //Images
   //--------------------------------
-  this.assets.images.actor = new ImageAsset("assets/cny2017/actor.png");
+  this.assets.images.rooster = new ImageAsset("assets/cny2017/rooster.png");
   this.assets.images.sarcophagus = new ImageAsset("assets/cny2017/sarcophagus.png");
   this.assets.images.comicIntro = new ImageAsset("assets/cny2017/comic-intro.png");
   this.assets.images.comicWin = new ImageAsset("assets/cny2017/comic-win.png");
@@ -68,27 +68,29 @@ export function initialise() {
       },
     },
     
-    sarcophagus: {
+    rooster: {
       rule: AVO.ANIMATION_RULE_BASIC,
-      tileWidth: 64,
+      tileWidth: 128,
       tileHeight: 128,
-      tileOffsetX: 0,
-      tileOffsetY: -32,
+      tileOffsetX: -32,
+      tileOffsetY: 0,
       actions: {
         idle: {
           loop: true,
           steps: [
-            { col: 0, row: 0, duration: 1 }
+            { col: 0, row: 0, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 2, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 },
           ],
         },
-        glow: {
+        walk: {
           loop: true,
           steps: [
-            { col: 1, row: 0, duration: STEPS_PER_SECOND * 4 },
-            { col: 0, row: 1, duration: STEPS_PER_SECOND * 4 },
-            { col: 1, row: 1, duration: STEPS_PER_SECOND * 4 },
-            { col: 0, row: 1, duration: STEPS_PER_SECOND * 4 },
-            { col: 1, row: 0, duration: STEPS_PER_SECOND * 4 },
+            { col: 0, row: 0, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 2, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 },
           ],
         },
       },
@@ -202,12 +204,14 @@ function initialiseLevel() {
   
   const midX = this.canvasWidth / 2, midY = this.canvasHeight / 2;
   
-  this.refs[AVO.REF.PLAYER] = new Actor(AVO.REF.PLAYER, midX / 2, midY, 32, AVO.SHAPE_CIRCLE);
-  //this.refs[AVO.REF.PLAYER].spritesheet = this.assets.images.actor;
-  //this.refs[AVO.REF.PLAYER].animationSet = this.animationSets.actor;
+  this.refs[AVO.REF.PLAYER] = new Actor(AVO.REF.PLAYER, midX / 2, midY, 64, AVO.SHAPE_CIRCLE);
+  this.refs[AVO.REF.PLAYER].spritesheet = this.assets.images.rooster;
+  this.refs[AVO.REF.PLAYER].animationSet = this.animationSets.rooster;
   this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
   this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
   this.actors.push(this.refs[AVO.REF.PLAYER]);
+  
+  console.log(this.refs[AVO.REF.PLAYER].spritesheet);
 }
 
 function spawnRandomObstacle(n = 100) {
