@@ -16,6 +16,8 @@ import { ImageAsset } from "../avo/utility.js";
 const FIREWORK_MISSILE = "firework_missile";
 
 export function initialise() {
+  this.appConfig.debugMode = false;
+  
   //Scripts
   //--------------------------------
   this.scripts.customRunStart = runStart;
@@ -29,6 +31,7 @@ export function initialise() {
   //Images
   //--------------------------------
   this.assets.images.rooster = new ImageAsset("assets/cny2017/rooster.png");
+  this.assets.images.fireworks = new ImageAsset("assets/cny2017/fireworks.png");
   this.assets.images.background = new ImageAsset("assets/cny2017/city-background.png");
   this.assets.images.comicIntro = new ImageAsset("assets/cny2017/comic-intro.png");
   this.assets.images.comicWin = new ImageAsset("assets/cny2017/comic-win.png");
@@ -39,35 +42,6 @@ export function initialise() {
   //--------------------------------
   const STEPS_PER_SECOND = AVO.FRAMES_PER_SECOND / 10;
   this.animationSets = {
-    actor: {
-      rule: AVO.ANIMATION_RULE_DIRECTIONAL,
-      tileWidth: 64,
-      tileHeight: 64,
-      tileOffsetX: 0,
-      tileOffsetY: -16,
-      actions: {
-        idle: {
-          loop: true,
-          steps: [
-            { row: 0, duration: 1 }
-          ],
-        },
-        move: {
-          loop: true,
-          steps: [
-            { row: 1, duration: STEPS_PER_SECOND },
-            { row: 2, duration: STEPS_PER_SECOND },
-            { row: 3, duration: STEPS_PER_SECOND },
-            { row: 4, duration: STEPS_PER_SECOND },
-            { row: 5, duration: STEPS_PER_SECOND },
-            { row: 4, duration: STEPS_PER_SECOND },
-            { row: 3, duration: STEPS_PER_SECOND },
-            { row: 2, duration: STEPS_PER_SECOND },
-          ],
-        },
-      },
-    },
-    
     rooster: {
       rule: AVO.ANIMATION_RULE_BASIC,
       tileWidth: 128,
@@ -85,6 +59,24 @@ export function initialise() {
           ],
         },
         walk: {
+          loop: true,
+          steps: [
+            { col: 0, row: 0, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 2, duration: STEPS_PER_SECOND * 1 },
+            { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 },
+          ],
+        },
+      },
+    },
+    fireworks: {
+      rule: AVO.ANIMATION_RULE_BASIC,
+      tileWidth: 64,
+      tileHeight: 64,
+      tileOffsetX: 0,
+      tileOffsetY: 16,
+      actions: {
+        idle: {
           loop: true,
           steps: [
             { col: 0, row: 0, duration: STEPS_PER_SECOND * 1 },
@@ -171,6 +163,7 @@ function runAction() {
     this.changeState(AVO.STATE_COMIC, playWinComic);
   }
   
+  //Run physics for non-player Actors.
   this.actors.map((actor) => {
     if (actor === this.refs[AVO.REF.PLAYER]) return;
     
@@ -178,14 +171,22 @@ function runAction() {
       actor.y -= actor.attributes[AVO.ATTR.SPEED];
     }
     
+    //Everything scrolls past!
     actor.x -= this.store.flyingSpeed;
-    
+
+    //Look, nothing colliding with the player is a good thing.
     if (this.isATouchingB(actor, this.refs[AVO.REF.PLAYER])) {
       this.changeState(AVO.STATE_COMIC, playLoseComic);
     }
   });
   
+  //Add new obstacles.
   this.spawnRandomObstacle(1000);
+  
+  //Clean up! If it's not the player or on the screen, get rid of it.
+  this.actors = this.actors.filter((actor) => {
+    return actor === this.refs[AVO.REF.PLAYER] || actor.x >= 0;
+  }); 
 }
 
 function initialiseLevel() {
@@ -217,11 +218,13 @@ function spawnRandomObstacle(n = 100) {
   const r = Math.random() * n;
   if (r < 50) {
     const actor = new Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * 1.10), Math.floor(this.canvasHeight * (Math.random() * 0.5 + 1)), 32, AVO.SHAPE_CIRCLE);
-    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 8 + 4);
+    actor.spritesheet = this.assets.images.fireworks;
+    actor.animationSet = this.animationSets.fireworks;
+    actor.playAnimation("idle");
+    actor.rotation = AVO.ROTATION_NORTH;
+    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 12 + 4);
     this.actors.push(actor);
   }
-  
-  
 }
 
 function prePaint() {
