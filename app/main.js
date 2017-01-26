@@ -310,26 +310,52 @@
 	        }
 
 	        //Keyboard input
-	        if (this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.DOWN].state !== AVO.INPUT_ACTIVE) {
+	        var vDir = 0;
+	        var hDir = 0;
+	        if (this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE) vDir--;
+	        if (this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE) vDir++;
+	        if (this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE) hDir--;
+	        if (this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE) hDir++;
+
+	        if (vDir < 0 && hDir === 0) {
 	          player.intent = {
 	            name: AVO.ACTION.MOVE,
 	            angle: AVO.ROTATION_NORTH
 	          };
-	        } else if (this.keys[AVO.KEY_CODES.UP].state !== AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE) {
+	        } else if (vDir > 0 && hDir === 0) {
 	          player.intent = {
 	            name: AVO.ACTION.MOVE,
 	            angle: AVO.ROTATION_SOUTH
 	          };
-	        }
-	        if (this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.RIGHT].state !== AVO.INPUT_ACTIVE) {
+	        } else if (vDir === 0 && hDir < 0) {
 	          player.intent = {
 	            name: AVO.ACTION.MOVE,
 	            angle: AVO.ROTATION_WEST
 	          };
-	        } else if (this.keys[AVO.KEY_CODES.LEFT].state !== AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE) {
+	        } else if (vDir === 0 && hDir > 0) {
 	          player.intent = {
 	            name: AVO.ACTION.MOVE,
 	            angle: AVO.ROTATION_EAST
+	          };
+	        } else if (vDir > 0 && hDir > 0) {
+	          player.intent = {
+	            name: AVO.ACTION.MOVE,
+	            angle: AVO.ROTATION_SOUTHEAST
+	          };
+	        } else if (vDir > 0 && hDir < 0) {
+	          player.intent = {
+	            name: AVO.ACTION.MOVE,
+	            angle: AVO.ROTATION_SOUTHWEST
+	          };
+	        } else if (vDir < 0 && hDir < 0) {
+	          player.intent = {
+	            name: AVO.ACTION.MOVE,
+	            angle: AVO.ROTATION_NORTHWEST
+	          };
+	        } else if (vDir < 0 && hDir > 0) {
+	          player.intent = {
+	            name: AVO.ACTION.MOVE,
+	            angle: AVO.ROTATION_NORTHEAST
 	          };
 	        }
 
@@ -621,7 +647,7 @@
 	          }
 	          break;
 	        case AVO.COMIC_STRIP_STATE_IDLE:
-	          if (this.pointer.state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
+	          if (this.pointer.state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE || this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
 	            comic.currentPanel++;
 	            comic.state = AVO.COMIC_STRIP_STATE_TRANSITIONING;
 	          }
@@ -823,6 +849,8 @@
 	      //DEBUG: Paint hitboxes
 	      //--------------------------------
 	      if (this.appConfig.debugMode) {
+	        this.context2d.lineWidth = 1;
+
 	        //Areas of Effects
 	        var _iteratorNormalCompletion7 = true;
 	        var _didIteratorError7 = false;
@@ -981,6 +1009,7 @@
 
 	      if (this.appConfig.debugMode) {
 	        this.context2d.strokeStyle = "rgba(128,128,128,0.8)";
+	        this.context2d.lineWidth = 1;
 	        this.context2d.beginPath();
 	        this.context2d.arc(this.pointer.start.x, this.pointer.start.y, AVO.INPUT_DISTANCE_SENSITIVITY * 2, 0, 2 * Math.PI);
 	        this.context2d.stroke();
@@ -1167,6 +1196,9 @@
 	    this.transitionTime = AVO.DEFAULT_COMIC_STRIP_TRANSITION_TIME;
 	    this.background = "#333";
 
+	    this.currentPanel = 0;
+	    this.state = AVO.COMIC_STRIP_STATE_TRANSITIONING;
+
 	    this.start();
 	  }
 
@@ -1255,9 +1287,14 @@
 	var SHAPE_CIRCLE = exports.SHAPE_CIRCLE = 2;
 
 	var ROTATION_EAST = exports.ROTATION_EAST = 0;
-	var ROTATION_SOUTH = exports.ROTATION_SOUTH = Math.PI / 2;
+	var ROTATION_SOUTH = exports.ROTATION_SOUTH = Math.PI * 0.5;
 	var ROTATION_WEST = exports.ROTATION_WEST = Math.PI;
-	var ROTATION_NORTH = exports.ROTATION_NORTH = -Math.PI / 2;
+	var ROTATION_NORTH = exports.ROTATION_NORTH = Math.PI * -0.5;
+
+	var ROTATION_SOUTHEAST = exports.ROTATION_SOUTHEAST = Math.PI * 0.25;
+	var ROTATION_SOUTHWEST = exports.ROTATION_SOUTHWEST = Math.PI * 0.75;
+	var ROTATION_NORTHWEST = exports.ROTATION_NORTHWEST = Math.PI * -0.75;
+	var ROTATION_NORTHEAST = exports.ROTATION_NORTHEAST = Math.PI * -0.25;
 
 	var DIRECTION_EAST = exports.DIRECTION_EAST = 0;
 	var DIRECTION_SOUTH = exports.DIRECTION_SOUTH = 1;
@@ -1830,7 +1867,11 @@
 	********************************************************************************
 	 */
 
+	var FIREWORK_MISSILE = "firework_missile";
+
 	function initialise() {
+	  this.appConfig.debugMode = false;
+
 	  //Scripts
 	  //--------------------------------
 	  this.scripts.customRunStart = runStart;
@@ -1838,51 +1879,50 @@
 	  this.scripts.customRunEnd = runEnd;
 	  this.scripts.prePaint = prePaint;
 	  this.scripts.postPaint = postPaint;
+	  this.spawnRandomObstacle = spawnRandomObstacle.bind(this);
 	  //--------------------------------
 
 	  //Images
 	  //--------------------------------
-	  this.assets.images.actor = new _utility.ImageAsset("assets/cny2017/actor.png");
-	  this.assets.images.sarcophagus = new _utility.ImageAsset("assets/cny2017/sarcophagus.png");
-	  this.assets.images.comicPanelA = new _utility.ImageAsset("assets/cny2017/comic-panel-800x600-red.png");
+	  this.assets.images.rooster = new _utility.ImageAsset("assets/cny2017/rooster.png");
+	  this.assets.images.fireworks = new _utility.ImageAsset("assets/cny2017/fireworks.png");
+	  this.assets.images.background = new _utility.ImageAsset("assets/cny2017/city-background.png");
+	  this.assets.images.comicIntro = new _utility.ImageAsset("assets/cny2017/comic-intro.png");
+	  this.assets.images.comicWin = new _utility.ImageAsset("assets/cny2017/comic-win.png");
+	  this.assets.images.comicLose = new _utility.ImageAsset("assets/cny2017/comic-lose.png");
 	  //--------------------------------
 
 	  //Animations
 	  //--------------------------------
 	  var STEPS_PER_SECOND = AVO.FRAMES_PER_SECOND / 10;
 	  this.animationSets = {
-	    actor: {
-	      rule: AVO.ANIMATION_RULE_DIRECTIONAL,
-	      tileWidth: 64,
-	      tileHeight: 64,
-	      tileOffsetX: 0,
-	      tileOffsetY: -16,
+	    rooster: {
+	      rule: AVO.ANIMATION_RULE_BASIC,
+	      tileWidth: 128,
+	      tileHeight: 128,
+	      tileOffsetX: -32,
+	      tileOffsetY: 0,
 	      actions: {
 	        idle: {
 	          loop: true,
-	          steps: [{ row: 0, duration: 1 }]
+	          steps: [{ col: 0, row: 0, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 2, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 }]
 	        },
-	        move: {
+	        walk: {
 	          loop: true,
-	          steps: [{ row: 1, duration: STEPS_PER_SECOND }, { row: 2, duration: STEPS_PER_SECOND }, { row: 3, duration: STEPS_PER_SECOND }, { row: 4, duration: STEPS_PER_SECOND }, { row: 5, duration: STEPS_PER_SECOND }, { row: 4, duration: STEPS_PER_SECOND }, { row: 3, duration: STEPS_PER_SECOND }, { row: 2, duration: STEPS_PER_SECOND }]
+	          steps: [{ col: 0, row: 0, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 2, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 }]
 	        }
 	      }
 	    },
-
-	    sarcophagus: {
+	    fireworks: {
 	      rule: AVO.ANIMATION_RULE_BASIC,
 	      tileWidth: 64,
-	      tileHeight: 128,
+	      tileHeight: 64,
 	      tileOffsetX: 0,
-	      tileOffsetY: -32,
+	      tileOffsetY: 16,
 	      actions: {
 	        idle: {
 	          loop: true,
-	          steps: [{ col: 0, row: 0, duration: 1 }]
-	        },
-	        glow: {
-	          loop: true,
-	          steps: [{ col: 1, row: 0, duration: STEPS_PER_SECOND * 4 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 1, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 4 }, { col: 1, row: 0, duration: STEPS_PER_SECOND * 4 }]
+	          steps: [{ col: 0, row: 0, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 2, duration: STEPS_PER_SECOND * 1 }, { col: 0, row: 1, duration: STEPS_PER_SECOND * 1 }]
 	        }
 	      }
 	    }
@@ -1928,34 +1968,39 @@
 	}
 
 	function runStart() {
-	  /*if (this.pointer.state === AVO.INPUT_ACTIVE || 
-	      this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE ||
-	      this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
-	    this.changeState(AVO.STATE_COMIC, comicStart);
-	  }*/
-
-	  this.changeState(AVO.STATE_COMIC, comicStart);
-	}
-
-	function comicStart() {
-	  this.comicStrip = new _index.ComicStrip("startcomic", [//this.assets.images.comicPanelA,
-	    //this.assets.images.comicPanelB,
-	    //this.assets.images.comicPanelC,
-	  ], comicStartFinished);
-	  this.comicStrip.start();
-	}
-
-	function comicStartFinished() {
+	  //this.changeState(AVO.STATE_COMIC, playIntroComic);
 	  this.changeState(AVO.STATE_ACTION, initialiseLevel);
+	}
+
+	function playIntroComic() {
+	  this.comicStrip = new _index.ComicStrip("introcomic", [this.assets.images.comicIntro], finishIntroComic);
+	}
+
+	function finishIntroComic() {
+	  this.changeState(AVO.STATE_ACTION, initialiseLevel);
+	}
+
+	function playWinComic() {
+	  this.comicStrip = new _index.ComicStrip("win_comic", [this.assets.images.comicWin], finishIntroComic);
+	}
+
+	function finishWinComic() {
+	  this.changeState(AVO.STATE_COMIC, playIntroComic);
+	}
+
+	function playLoseComic() {
+	  this.comicStrip = new _index.ComicStrip("lose_comic", [this.assets.images.comicLose], finishIntroComic);
+	}
+
+	function finishLoseComic() {
+	  this.changeState(AVO.STATE_COMIC, playIntroComic);
 	}
 
 	function runEnd() {}
 
 	function runAction() {
+	  var _this = this;
+
 	  if (this.refs[AVO.REF.PLAYER].x < 0) this.refs[AVO.REF.PLAYER].x = 0;
 	  if (this.refs[AVO.REF.PLAYER].y < 0) this.refs[AVO.REF.PLAYER].y = 0;
 	  if (this.refs[AVO.REF.PLAYER].x > this.canvasWidth) this.refs[AVO.REF.PLAYER].x = this.canvasWidth;
@@ -1964,6 +2009,36 @@
 	  this.store.flyingSpeed = Math.floor(this.refs[AVO.REF.PLAYER].x / this.canvasWidth * (this.store.FLYING_SPEED_MAX - this.store.FLYING_SPEED_MIN) + this.store.FLYING_SPEED_MIN);
 	  this.store.time++;
 	  this.store.distance += this.store.flyingSpeed;
+
+	  //Win condition?
+	  if (this.store.distance >= this.store.TARGET_DISTANCE) {
+	    this.changeState(AVO.STATE_COMIC, playWinComic);
+	  }
+
+	  //Run physics for non-player Actors.
+	  this.actors.map(function (actor) {
+	    if (actor === _this.refs[AVO.REF.PLAYER]) return;
+
+	    if (actor.name === FIREWORK_MISSILE) {
+	      actor.y -= actor.attributes[AVO.ATTR.SPEED];
+	    }
+
+	    //Everything scrolls past!
+	    actor.x -= _this.store.flyingSpeed;
+
+	    //Look, nothing colliding with the player is a good thing.
+	    if (_this.isATouchingB(actor, _this.refs[AVO.REF.PLAYER])) {
+	      _this.changeState(AVO.STATE_COMIC, playLoseComic);
+	    }
+	  });
+
+	  //Add new obstacles.
+	  this.spawnRandomObstacle(1000);
+
+	  //Clean up! If it's not the player or on the screen, get rid of it.
+	  this.actors = this.actors.filter(function (actor) {
+	    return actor === _this.refs[AVO.REF.PLAYER] || actor.x >= 0;
+	  });
 	}
 
 	function initialiseLevel() {
@@ -1973,55 +2048,186 @@
 	  this.refs = {};
 	  this.store = {
 	    distance: 0,
-	    TARGET_DISTANCE: 10000000,
+	    TARGET_DISTANCE: 10000,
 	    flyingSpeed: 0,
 	    FLYING_SPEED_MIN: 2,
 	    FLYING_SPEED_MAX: 16,
-	    time: 0
+	    time: 0,
+	    GOSH_YOU_ARE_LATE_TIME: 45 * AVO.FRAMES_PER_SECOND
 	  };
 
 	  var midX = this.canvasWidth / 2,
 	      midY = this.canvasHeight / 2;
 
-	  this.refs[AVO.REF.PLAYER] = new _entities.Actor(AVO.REF.PLAYER, midX / 2, midY, 32, AVO.SHAPE_CIRCLE);
-	  this.refs[AVO.REF.PLAYER].spritesheet = this.assets.images.actor;
-	  this.refs[AVO.REF.PLAYER].animationSet = this.animationSets.actor;
+	  this.refs[AVO.REF.PLAYER] = new _entities.Actor(AVO.REF.PLAYER, midX / 2, midY, 64, AVO.SHAPE_CIRCLE);
+	  this.refs[AVO.REF.PLAYER].spritesheet = this.assets.images.rooster;
+	  this.refs[AVO.REF.PLAYER].animationSet = this.animationSets.rooster;
 	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
 	  this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
 	  this.actors.push(this.refs[AVO.REF.PLAYER]);
 	}
 
+	function spawnRandomObstacle() {
+	  var n = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 100;
+
+	  var r = Math.random() * n;
+	  if (r < 50) {
+	    var actor = new _entities.Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * 1.10), Math.floor(this.canvasHeight * (Math.random() * 0.5 + 1)), 32, AVO.SHAPE_CIRCLE);
+	    actor.spritesheet = this.assets.images.fireworks;
+	    actor.animationSet = this.animationSets.fireworks;
+	    actor.playAnimation("idle");
+	    actor.rotation = AVO.ROTATION_NORTH;
+	    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 12 + 4);
+	    this.actors.push(actor);
+	  }
+	}
+
 	function prePaint() {
-	  if (this.state !== AVO.STATE_ACTION) return;
+	  if (this.state === AVO.STATE_ACTION) {
+	    //Paint the sky.
+	    //const percentage = Math.max(0, Math.min(1, this.store.distance / this.store.TARGET_DISTANCE));
+	    var percentage = Math.max(0, Math.min(1, this.store.time / this.store.GOSH_YOU_ARE_LATE_TIME));
+	    var gradient = this.context2d.createLinearGradient(0, this.canvasHeight * 0.2, 0, this.canvasHeight * 0.8);
+	    var COLOUR_MORNING_TOP = { R: 102, G: 204, B: 255 };
+	    var COLOUR_MORNING_BOTTOM = { R: 255, G: 255, B: 255 };
+	    var COLOUR_EVENING_TOP = { R: 153, G: 51, B: 0 };
+	    var COLOUR_EVENING_BOTTOM = { R: 255, G: 153, B: 0 };
+	    var top_r = Math.floor(COLOUR_MORNING_TOP.R + percentage * (COLOUR_EVENING_TOP.R - COLOUR_MORNING_TOP.R));
+	    var top_g = Math.floor(COLOUR_MORNING_TOP.G + percentage * (COLOUR_EVENING_TOP.G - COLOUR_MORNING_TOP.G));
+	    var top_b = Math.floor(COLOUR_MORNING_TOP.B + percentage * (COLOUR_EVENING_TOP.B - COLOUR_MORNING_TOP.B));
+	    var bottom_r = Math.floor(COLOUR_MORNING_BOTTOM.R + percentage * (COLOUR_EVENING_BOTTOM.R - COLOUR_MORNING_BOTTOM.R));
+	    var bottom_g = Math.floor(COLOUR_MORNING_BOTTOM.G + percentage * (COLOUR_EVENING_BOTTOM.G - COLOUR_MORNING_BOTTOM.G));
+	    var bottom_b = Math.floor(COLOUR_MORNING_BOTTOM.B + percentage * (COLOUR_EVENING_BOTTOM.B - COLOUR_MORNING_BOTTOM.B));
 
-	  var backgroundOffset = Math.floor(this.store.distance * 1 % this.canvasWidth);
+	    gradient.addColorStop(0, "rgba(" + top_r + "," + top_g + "," + top_b + ",1)");
+	    gradient.addColorStop(1, "rgba(" + bottom_r + "," + bottom_g + "," + bottom_b + ",1)");
 
-	  this.context2d.fillStyle = "#069";
-	  this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
-	  this.context2d.fillStyle = "#39c";
-	  this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
+	    this.context2d.fillStyle = gradient;
+	    this.context2d.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+	    //Paint the city background.
+	    var backgroundOffset = Math.floor(this.store.distance * 1 % this.canvasWidth);
+	    this.context2d.drawImage(this.assets.images.background.img, -backgroundOffset, 0);
+	    this.context2d.drawImage(this.assets.images.background.img, -backgroundOffset + this.canvasWidth, 0);
+
+	    //if (this.store.prevBGOffset > backgroundOffset) this.store.bgFlip = !this.store.bgFlip;
+	    //this.store.prevBGOffset = backgroundOffset;
+
+	    //this.context2d.fillStyle = (this.store.bgFlip) ? "#069" : "#39c";
+	    //this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
+	    //this.context2d.fillStyle = (this.store.bgFlip) ? "#39c" : "#069";
+	    //this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
+	  }
 	}
 
 	function postPaint() {
-	  if (this.state !== AVO.STATE_ACTION) return;
+	  if (this.state === AVO.STATE_ACTION) {
+	    //Paint the UI: Time
+	    var time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
+	    var miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
+	    while (miliseconds.length < 3) {
+	      miliseconds = "0" + miliseconds;
+	    }
+	    var seconds = time % 60;seconds = seconds >= 10 ? seconds : "0" + seconds;
+	    var minutes = Math.floor(time / 60);minutes = minutes >= 10 ? minutes : "0" + minutes;
+	    this.context2d.font = AVO.DEFAULT_FONT;
+	    this.context2d.textAlign = "center";
+	    this.context2d.textBaseline = "middle";
+	    this.context2d.fillStyle = "#000";
+	    this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.05);
 
-	  var distanceLeft = this.store.TARGET_DISTANCE - this.store.distance;
-	  var time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
-	  var miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
-	  while (miliseconds.length < 3) {
-	    miliseconds = "0" + miliseconds;
+	    //Paint the UI: Distance to target
+	    this.context2d.fillText(Math.floor(this.store.distance / 10) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
+	    var distStartX = this.canvasWidth * 0.25;
+	    var distEndX = this.canvasWidth * 0.75;
+	    var distMidY = this.canvasHeight * 0.9;
+	    var distRadius = 16;
+	    this.context2d.fillStyle = "#fc3";
+	    this.context2d.strokeStyle = "#666";
+	    this.context2d.lineWidth = 3;
+	    this.context2d.beginPath();
+	    this.context2d.arc(distStartX, distMidY, distRadius, 0, 2 * Math.PI);
+	    this.context2d.closePath();
+	    this.context2d.stroke();
+	    this.context2d.beginPath();
+	    this.context2d.arc(distEndX, distMidY, distRadius, 0, 2 * Math.PI);
+	    this.context2d.closePath();
+	    this.context2d.stroke();
+	    this.context2d.beginPath();
+	    this.context2d.moveTo(distStartX + distRadius, distMidY);
+	    this.context2d.lineTo(distEndX - distRadius, distMidY);
+	    this.context2d.closePath();
+	    this.context2d.stroke();
+
+	    var currentX = this.store.distance / this.store.TARGET_DISTANCE * (distEndX - distStartX) + distStartX;
+	    this.context2d.beginPath();
+	    this.context2d.arc(currentX, distMidY, distRadius, 0, 2 * Math.PI);
+	    this.context2d.closePath();
+	    this.context2d.fill();
+
+	    //Paint the UI: Paint cursor
+	    if (this.pointer.state === AVO.INPUT_ACTIVE) {
+	      var player = this.refs[AVO.REF.PLAYER];
+
+	      this.context2d.fillStyle = "#633";
+	      this.context2d.strokeStyle = "#933";
+	      this.context2d.lineWidth = 2;
+	      this.context2d.beginPath();
+	      this.context2d.arc(this.pointer.start.x, this.pointer.start.y, AVO.INPUT_DISTANCE_SENSITIVITY * this.sizeRatioY * 2, 0, 2 * Math.PI);
+	      this.context2d.moveTo(this.pointer.start.x, this.pointer.start.y);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.beginPath();
+	      this.context2d.arc(this.pointer.now.x, this.pointer.now.y, AVO.INPUT_DISTANCE_SENSITIVITY * this.sizeRatioY * 2, 0, 2 * Math.PI);
+	      this.context2d.closePath();
+	      this.context2d.fill();
+
+	      this.context2d.beginPath();
+	      this.context2d.moveTo(this.pointer.start.x + 0, this.pointer.start.y + 48);
+	      this.context2d.lineTo(this.pointer.start.x + 16, this.pointer.start.y + 40);
+	      this.context2d.lineTo(this.pointer.start.x - 16, this.pointer.start.y + 40);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.beginPath();
+	      this.context2d.moveTo(this.pointer.start.x + 0, this.pointer.start.y - 48);
+	      this.context2d.lineTo(this.pointer.start.x + 16, this.pointer.start.y - 40);
+	      this.context2d.lineTo(this.pointer.start.x - 16, this.pointer.start.y - 40);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.beginPath();
+	      this.context2d.moveTo(this.pointer.start.x + 48, this.pointer.start.y + 0);
+	      this.context2d.lineTo(this.pointer.start.x + 40, this.pointer.start.y + 16);
+	      this.context2d.lineTo(this.pointer.start.x + 40, this.pointer.start.y - 16);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.beginPath();
+	      this.context2d.moveTo(this.pointer.start.x - 48, this.pointer.start.y + 0);
+	      this.context2d.lineTo(this.pointer.start.x - 40, this.pointer.start.y + 16);
+	      this.context2d.lineTo(this.pointer.start.x - 40, this.pointer.start.y - 16);
+	      this.context2d.closePath();
+	      this.context2d.stroke();
+
+	      this.context2d.stroke();
+	    }
+	  } else if (this.state === AVO.STATE_COMIC && this.comicStrip && this.comicStrip.currentPanel === 0 && this.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
+	    //Paint the UI: Time
+	    var _time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
+	    var _miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
+	    while (_miliseconds.length < 3) {
+	      _miliseconds = "0" + _miliseconds;
+	    }
+	    var _seconds = _time % 60;_seconds = _seconds >= 10 ? _seconds : "0" + _seconds;
+	    var _minutes = Math.floor(_time / 60);_minutes = _minutes >= 10 ? _minutes : "0" + _minutes;
+	    this.context2d.font = AVO.DEFAULT_FONT;
+	    this.context2d.textAlign = "center";
+	    this.context2d.textBaseline = "middle";
+	    this.context2d.fillStyle = "#000";
+	    this.context2d.fillText(_minutes + ":" + _seconds + "." + _miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.15);
 	  }
-	  var seconds = time % 60;seconds = seconds >= 10 ? seconds : "0" + seconds;
-	  var minutes = Math.floor(time / 60);minutes = minutes >= 10 ? minutes : "0" + minutes;
-
-	  this.context2d.font = AVO.DEFAULT_FONT;
-	  this.context2d.textAlign = "center";
-	  this.context2d.textBaseline = "middle";
-	  this.context2d.fillStyle = "#000";
-	  this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.8);
-	  this.context2d.closePath();
-	  this.context2d.fillText(this.store.distance, this.canvasWidth * 0.5, this.canvasHeight * 0.9);
-	  this.context2d.closePath();
 	}
 
 /***/ }

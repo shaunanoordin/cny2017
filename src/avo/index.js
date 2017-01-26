@@ -212,26 +212,52 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
       }
       
       //Keyboard input
-      if (this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.DOWN].state !== AVO.INPUT_ACTIVE) {
+      let vDir = 0;
+      let hDir = 0;
+      if (this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE) vDir--;
+      if (this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE) vDir++;
+      if (this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE) hDir--;
+      if (this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE) hDir++;
+      
+      if (vDir < 0 && hDir === 0) {
         player.intent = {
           name: AVO.ACTION.MOVE,
           angle: AVO.ROTATION_NORTH,
         };
-      } else if (this.keys[AVO.KEY_CODES.UP].state !== AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE) {
+      } else if (vDir > 0 && hDir === 0) {
         player.intent = {
           name: AVO.ACTION.MOVE,
           angle: AVO.ROTATION_SOUTH,
         };
-      }
-      if (this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.RIGHT].state !== AVO.INPUT_ACTIVE) {
+      } else if (vDir === 0 && hDir < 0) {
         player.intent = {
           name: AVO.ACTION.MOVE,
           angle: AVO.ROTATION_WEST,
         };
-      } else if (this.keys[AVO.KEY_CODES.LEFT].state !== AVO.INPUT_ACTIVE && this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE) {
+      } else if (vDir === 0 && hDir > 0) {
         player.intent = {
           name: AVO.ACTION.MOVE,
           angle: AVO.ROTATION_EAST,
+        };
+      } else if (vDir > 0 && hDir > 0) {
+        player.intent = {
+          name: AVO.ACTION.MOVE,
+          angle: AVO.ROTATION_SOUTHEAST,
+        };
+      } else if (vDir > 0 && hDir < 0) {
+        player.intent = {
+          name: AVO.ACTION.MOVE,
+          angle: AVO.ROTATION_SOUTHWEST,
+        };
+      } else if (vDir < 0 && hDir < 0) {
+        player.intent = {
+          name: AVO.ACTION.MOVE,
+          angle: AVO.ROTATION_NORTHWEST,
+        };
+      } else if (vDir < 0 && hDir > 0) {
+        player.intent = {
+          name: AVO.ACTION.MOVE,
+          angle: AVO.ROTATION_NORTHEAST,
         };
       }
       
@@ -401,6 +427,9 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
       case AVO.COMIC_STRIP_STATE_IDLE:
         if (this.pointer.state === AVO.INPUT_ACTIVE || 
             this.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE ||
+            this.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE ||
+            this.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE ||
+            this.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE ||
             this.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE ||
             this.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
           comic.currentPanel++;
@@ -610,6 +639,8 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     //DEBUG: Paint hitboxes
     //--------------------------------
     if (this.appConfig.debugMode) {
+      this.context2d.lineWidth = 1;
+      
       //Areas of Effects
       for (let aoe of this.areasOfEffect) {
         let durationPercentage = 1;
@@ -681,6 +712,7 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
     //--------------------------------
     if (this.appConfig.debugMode) {      
       this.context2d.strokeStyle = "rgba(128,128,128,0.8)";
+      this.context2d.lineWidth = 1;
       this.context2d.beginPath();
       this.context2d.arc(this.pointer.start.x, this.pointer.start.y, AVO.INPUT_DISTANCE_SENSITIVITY * 2, 0, 2 * Math.PI);
       this.context2d.stroke();
@@ -846,6 +878,9 @@ export class ComicStrip {
     this.waitTime = AVO.DEFAULT_COMIC_STRIP_WAIT_TIME_BEFORE_INPUT;
     this.transitionTime = AVO.DEFAULT_COMIC_STRIP_TRANSITION_TIME;    
     this.background = "#333";
+    
+    this.currentPanel = 0;
+    this.state = AVO.COMIC_STRIP_STATE_TRANSITIONING;
     
     this.start();
   }
