@@ -1883,7 +1883,7 @@
 	  //Images
 	  //--------------------------------
 	  this.assets.images.rooster = new _utility.ImageAsset("assets/cny2017/rooster.png");
-	  this.assets.images.sarcophagus = new _utility.ImageAsset("assets/cny2017/sarcophagus.png");
+	  this.assets.images.background = new _utility.ImageAsset("assets/cny2017/city-background.png");
 	  this.assets.images.comicIntro = new _utility.ImageAsset("assets/cny2017/comic-intro.png");
 	  this.assets.images.comicWin = new _utility.ImageAsset("assets/cny2017/comic-win.png");
 	  this.assets.images.comicLose = new _utility.ImageAsset("assets/cny2017/comic-lose.png");
@@ -2045,7 +2045,8 @@
 	    flyingSpeed: 0,
 	    FLYING_SPEED_MIN: 2,
 	    FLYING_SPEED_MAX: 16,
-	    time: 0
+	    time: 0,
+	    GOSH_YOU_ARE_LATE_TIME: 45 * AVO.FRAMES_PER_SECOND
 	  };
 
 	  var midX = this.canvasWidth / 2,
@@ -2057,8 +2058,6 @@
 	  this.refs[AVO.REF.PLAYER].attributes[AVO.ATTR.SPEED] = 8;
 	  this.refs[AVO.REF.PLAYER].rotation = AVO.ROTATION_EAST;
 	  this.actors.push(this.refs[AVO.REF.PLAYER]);
-
-	  console.log(this.refs[AVO.REF.PLAYER].spritesheet);
 	}
 
 	function spawnRandomObstacle() {
@@ -2074,19 +2073,39 @@
 
 	function prePaint() {
 	  if (this.state === AVO.STATE_ACTION) {
+	    //Paint the sky.
+	    //const percentage = Math.max(0, Math.min(1, this.store.distance / this.store.TARGET_DISTANCE));
+	    var percentage = Math.max(0, Math.min(1, this.store.time / this.store.GOSH_YOU_ARE_LATE_TIME));
+	    var gradient = this.context2d.createLinearGradient(0, this.canvasHeight * 0.2, 0, this.canvasHeight * 0.8);
+	    var COLOUR_MORNING_TOP = { R: 102, G: 204, B: 255 };
+	    var COLOUR_MORNING_BOTTOM = { R: 255, G: 255, B: 255 };
+	    var COLOUR_EVENING_TOP = { R: 153, G: 51, B: 0 };
+	    var COLOUR_EVENING_BOTTOM = { R: 255, G: 153, B: 0 };
+	    var top_r = Math.floor(COLOUR_MORNING_TOP.R + percentage * (COLOUR_EVENING_TOP.R - COLOUR_MORNING_TOP.R));
+	    var top_g = Math.floor(COLOUR_MORNING_TOP.G + percentage * (COLOUR_EVENING_TOP.G - COLOUR_MORNING_TOP.G));
+	    var top_b = Math.floor(COLOUR_MORNING_TOP.B + percentage * (COLOUR_EVENING_TOP.B - COLOUR_MORNING_TOP.B));
+	    var bottom_r = Math.floor(COLOUR_MORNING_BOTTOM.R + percentage * (COLOUR_EVENING_BOTTOM.R - COLOUR_MORNING_BOTTOM.R));
+	    var bottom_g = Math.floor(COLOUR_MORNING_BOTTOM.G + percentage * (COLOUR_EVENING_BOTTOM.G - COLOUR_MORNING_BOTTOM.G));
+	    var bottom_b = Math.floor(COLOUR_MORNING_BOTTOM.B + percentage * (COLOUR_EVENING_BOTTOM.B - COLOUR_MORNING_BOTTOM.B));
+
+	    gradient.addColorStop(0, "rgba(" + top_r + "," + top_g + "," + top_b + ",1)");
+	    gradient.addColorStop(1, "rgba(" + bottom_r + "," + bottom_g + "," + bottom_b + ",1)");
+
+	    this.context2d.fillStyle = gradient;
+	    this.context2d.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+
 	    //Paint the city background.
-	    if (this.store.bgFlip === undefined) this.store.bgFlip = false;
-	    if (!this.store.prevBGOffset) this.store.prevBGOffset = 0;
-
 	    var backgroundOffset = Math.floor(this.store.distance * 1 % this.canvasWidth);
+	    this.context2d.drawImage(this.assets.images.background.img, -backgroundOffset, 0);
+	    this.context2d.drawImage(this.assets.images.background.img, -backgroundOffset + this.canvasWidth, 0);
 
-	    if (this.store.prevBGOffset > backgroundOffset) this.store.bgFlip = !this.store.bgFlip;
-	    this.store.prevBGOffset = backgroundOffset;
+	    //if (this.store.prevBGOffset > backgroundOffset) this.store.bgFlip = !this.store.bgFlip;
+	    //this.store.prevBGOffset = backgroundOffset;
 
-	    this.context2d.fillStyle = this.store.bgFlip ? "#069" : "#39c";
-	    this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
-	    this.context2d.fillStyle = this.store.bgFlip ? "#39c" : "#069";
-	    this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
+	    //this.context2d.fillStyle = (this.store.bgFlip) ? "#069" : "#39c";
+	    //this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
+	    //this.context2d.fillStyle = (this.store.bgFlip) ? "#39c" : "#069";
+	    //this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
 	  }
 	}
 
@@ -2107,7 +2126,7 @@
 	    this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.05);
 
 	    //Paint the UI: Distance to target
-	    this.context2d.fillText(Math.floor(this.store.distance / 50) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
+	    this.context2d.fillText(Math.floor(this.store.distance / 10) + "m", this.canvasWidth * 0.5, this.canvasHeight * 0.95);
 	    var distStartX = this.canvasWidth * 0.25;
 	    var distEndX = this.canvasWidth * 0.75;
 	    var distMidY = this.canvasHeight * 0.9;
