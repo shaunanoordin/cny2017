@@ -1897,7 +1897,7 @@
 	  this.assets.images.comicIntro2 = new _utility.ImageAsset("assets/cny2017/comic-intro-2.png");
 	  this.assets.images.comicIntro3 = new _utility.ImageAsset("assets/cny2017/comic-intro-3.png");
 	  this.assets.images.comicIntro4 = new _utility.ImageAsset("assets/cny2017/comic-intro-4.png");
-	  this.assets.images.comicIntro5 = new _utility.ImageAsset("assets/cny2017/comic-intro.png");
+	  this.assets.images.comicIntro5 = new _utility.ImageAsset("assets/cny2017/comic-intro-5.png");
 	  this.assets.images.comicWin1 = new _utility.ImageAsset("assets/cny2017/comic-win-1.png");
 	  this.assets.images.comicWin2 = new _utility.ImageAsset("assets/cny2017/comic-win-2.png");
 	  this.assets.images.comicWin3 = new _utility.ImageAsset("assets/cny2017/comic-win-3.png");
@@ -1926,11 +1926,11 @@
 	      }
 	    },
 	    fireworks: {
-	      rule: AVO.ANIMATION_RULE_BASIC,
+	      rule: AVO.ANIMATION_RULE_DIRECTIONAL,
 	      tileWidth: 64,
 	      tileHeight: 64,
 	      tileOffsetX: 0,
-	      tileOffsetY: 16,
+	      tileOffsetY: 0,
 	      actions: {
 	        idle: {
 	          loop: true,
@@ -1984,8 +1984,11 @@
 	}
 
 	function runStart() {
-	  this.changeState(AVO.STATE_COMIC, playIntroComic);
-	  //this.changeState(AVO.STATE_ACTION, initialiseLevel);
+	  if (!this.appConfig.debugMode) {
+	    this.changeState(AVO.STATE_COMIC, playIntroComic);
+	  } else {
+	    this.changeState(AVO.STATE_ACTION, initialiseLevel);
+	  }
 	}
 
 	function playIntroComic() {
@@ -2005,11 +2008,11 @@
 	}
 
 	function playLoseComic() {
-	  this.comicStrip = new _index.ComicStrip("lose_comic", [this.assets.images.comicLose], finishIntroComic);
+	  this.comicStrip = new _index.ComicStrip("lose_comic", [this.assets.images.comicLose], finishLoseComic);
 	}
 
 	function finishLoseComic() {
-	  this.changeState(AVO.STATE_COMIC, playIntroComic);
+	  this.changeState(AVO.STATE_ACTION, initialiseLevel);
 	}
 
 	function runEnd() {}
@@ -2036,7 +2039,8 @@
 	    if (actor === _this.refs[AVO.REF.PLAYER]) return;
 
 	    if (actor.name === FIREWORK_MISSILE) {
-	      actor.y -= actor.attributes[AVO.ATTR.SPEED];
+	      actor.x += Math.cos(actor.rotation) * actor.attributes[AVO.ATTR.SPEED];
+	      actor.y += Math.sin(actor.rotation) * actor.attributes[AVO.ATTR.SPEED];
 	    }
 
 	    //Everything scrolls past!
@@ -2049,7 +2053,7 @@
 	  });
 
 	  //Add new obstacles.
-	  this.spawnRandomObstacle(1000);
+	  this.spawnRandomObstacle(this.store.distance / this.store.TARGET_DISTANCE * 100);
 
 	  //Clean up! If it's not the player or on the screen, get rid of it.
 	  this.actors = this.actors.filter(function (actor) {
@@ -2086,17 +2090,31 @@
 	}
 
 	function spawnRandomObstacle() {
-	  var n = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 100;
+	  var distancePercent = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 100;
 
-	  var r = Math.random() * n;
-	  if (r < 50) {
-	    var actor = new _entities.Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * 1.10), Math.floor(this.canvasHeight * (Math.random() * 0.5 + 1)), 32, AVO.SHAPE_CIRCLE);
+	  if (Math.random() > 0.05) return;
+
+	  var r = Math.random() * 100;
+	  if (r < 60 && distancePercent >= 1) {
+	    //Upwards fireworks
+	    var actor = new _entities.Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * (Math.random() * 1.2 + 0.6)), Math.floor(this.canvasHeight * (Math.random() * 0.5 + 1)), 32, AVO.SHAPE_CIRCLE);
+	    actor.solid = false;
 	    actor.spritesheet = this.assets.images.fireworks;
 	    actor.animationSet = this.animationSets.fireworks;
 	    actor.playAnimation("idle");
 	    actor.rotation = AVO.ROTATION_NORTH;
-	    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 12 + 4);
+	    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 8 + 4);
 	    this.actors.push(actor);
+	  } else if (r < 80 && distancePercent >= 50) {
+	    //Bizarre sideways fireworks
+	    var _actor = new _entities.Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * (Math.random() * 0.6 + 1.2)), Math.floor(this.canvasHeight * (Math.random() * 0.8 + 0.1)), 32, AVO.SHAPE_CIRCLE);
+	    _actor.solid = false;
+	    _actor.spritesheet = this.assets.images.fireworks;
+	    _actor.animationSet = this.animationSets.fireworks;
+	    _actor.playAnimation("idle");
+	    _actor.rotation = AVO.ROTATION_WEST + (Math.random() * 0.1 - 0.05);
+	    _actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 4 + 2);
+	    this.actors.push(_actor);
 	  }
 	}
 
