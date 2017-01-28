@@ -20,12 +20,18 @@ export function initialise() {
   
   //Scripts
   //--------------------------------
+  this.scripts.preRun = preRun;
   this.scripts.customRunStart = runStart;
   this.scripts.customRunAction = runAction;
   this.scripts.customRunEnd = runEnd;
   this.scripts.prePaint = prePaint;
   this.scripts.postPaint = postPaint;
   this.spawnRandomObstacle = spawnRandomObstacle.bind(this);
+  
+  this.store = {
+    tick: 0,
+    TICK_MAX: AVO.FRAMES_PER_SECOND * 2,
+  };
   //--------------------------------
   
   //Images
@@ -33,8 +39,14 @@ export function initialise() {
   this.assets.images.rooster = new ImageAsset("assets/cny2017/rooster.png");
   this.assets.images.fireworks = new ImageAsset("assets/cny2017/fireworks.png");
   this.assets.images.background = new ImageAsset("assets/cny2017/city-background.png");
-  this.assets.images.comicIntro = new ImageAsset("assets/cny2017/comic-intro.png");
-  this.assets.images.comicWin = new ImageAsset("assets/cny2017/comic-win.png");
+  this.assets.images.comicIntro1 = new ImageAsset("assets/cny2017/comic-intro-1.png");
+  this.assets.images.comicIntro2 = new ImageAsset("assets/cny2017/comic-intro-2.png");
+  this.assets.images.comicIntro3 = new ImageAsset("assets/cny2017/comic-intro-3.png");
+  this.assets.images.comicIntro4 = new ImageAsset("assets/cny2017/comic-intro-4.png");
+  this.assets.images.comicIntro5 = new ImageAsset("assets/cny2017/comic-intro-5.png");
+  this.assets.images.comicWin1 = new ImageAsset("assets/cny2017/comic-win-1.png");
+  this.assets.images.comicWin2 = new ImageAsset("assets/cny2017/comic-win-2.png");
+  this.assets.images.comicWin3 = new ImageAsset("assets/cny2017/comic-win-3.png");
   this.assets.images.comicLose = new ImageAsset("assets/cny2017/comic-lose.png");
   //--------------------------------
   
@@ -70,11 +82,11 @@ export function initialise() {
       },
     },
     fireworks: {
-      rule: AVO.ANIMATION_RULE_BASIC,
+      rule: AVO.ANIMATION_RULE_DIRECTIONAL,
       tileWidth: 64,
       tileHeight: 64,
       tileOffsetX: 0,
-      tileOffsetY: 16,
+      tileOffsetY: 0,
       actions: {
         idle: {
           loop: true,
@@ -104,15 +116,27 @@ export function initialise() {
   //--------------------------------
 }
 
+function preRun() {
+  this.store.tick = (this.store.tick + 1) % this.store.TICK_MAX;
+}
+
 function runStart() {
-  //this.changeState(AVO.STATE_COMIC, playIntroComic);
-  this.changeState(AVO.STATE_ACTION, initialiseLevel);
+  if (!this.appConfig.debugMode) {
+    this.changeState(AVO.STATE_COMIC, playIntroComic);
+  } else {
+    this.changeState(AVO.STATE_ACTION, initialiseLevel);
+  }
 }
 
 function playIntroComic() {
   this.comicStrip = new ComicStrip(
     "introcomic",
-    [ this.assets.images.comicIntro ],
+    [ this.assets.images.comicIntro1,
+      this.assets.images.comicIntro2,
+      this.assets.images.comicIntro3,
+      this.assets.images.comicIntro4,
+      this.assets.images.comicIntro5,
+    ],
     finishIntroComic);
 }
 
@@ -123,8 +147,12 @@ function finishIntroComic() {
 function playWinComic() {
   this.comicStrip = new ComicStrip(
     "win_comic",
-    [ this.assets.images.comicWin ],
-    finishIntroComic);
+    [ this.assets.images.comicWin1,
+      this.assets.images.comicWin2,
+      this.assets.images.comicWin3,
+      this.assets.images.comicWin3,
+    ],
+    finishWinComic);
 }
 
 function finishWinComic() {
@@ -135,11 +163,11 @@ function playLoseComic() {
   this.comicStrip = new ComicStrip(
     "lose_comic",
     [ this.assets.images.comicLose ],
-    finishIntroComic);
+    finishLoseComic);
 }
 
 function finishLoseComic() {
-  this.changeState(AVO.STATE_COMIC, playIntroComic);
+  this.changeState(AVO.STATE_ACTION, initialiseLevel);
 }
 
 function runEnd() {}
@@ -168,7 +196,8 @@ function runAction() {
     if (actor === this.refs[AVO.REF.PLAYER]) return;
     
     if (actor.name === FIREWORK_MISSILE) {
-      actor.y -= actor.attributes[AVO.ATTR.SPEED];
+      actor.x += Math.cos(actor.rotation) * actor.attributes[AVO.ATTR.SPEED];
+      actor.y += Math.sin(actor.rotation) * actor.attributes[AVO.ATTR.SPEED];
     }
     
     //Everything scrolls past!
@@ -181,7 +210,7 @@ function runAction() {
   });
   
   //Add new obstacles.
-  this.spawnRandomObstacle(1000);
+  this.spawnRandomObstacle(this.store.distance / this.store.TARGET_DISTANCE * 100);
   
   //Clean up! If it's not the player or on the screen, get rid of it.
   this.actors = this.actors.filter((actor) => {
@@ -202,6 +231,8 @@ function initialiseLevel() {
     FLYING_SPEED_MAX: 16,
     time: 0,
     GOSH_YOU_ARE_LATE_TIME: 45 * AVO.FRAMES_PER_SECOND,
+    tick: this.store.tick,
+    TICK_MAX: this.store.TICK_MAX,
   };
   
   const midX = this.canvasWidth / 2, midY = this.canvasHeight / 2;
@@ -214,15 +245,27 @@ function initialiseLevel() {
   this.actors.push(this.refs[AVO.REF.PLAYER]);
 }
 
-function spawnRandomObstacle(n = 100) {
-  const r = Math.random() * n;
-  if (r < 50) {
-    const actor = new Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * 1.10), Math.floor(this.canvasHeight * (Math.random() * 0.5 + 1)), 32, AVO.SHAPE_CIRCLE);
+function spawnRandomObstacle(distancePercent = 100) {
+  if (Math.random() > 0.05) return;
+  
+  const r = Math.random() * 100;
+  if (r < 60 && distancePercent >= 1) {  //Upwards fireworks
+    const actor = new Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * (Math.random() * 1.2 + 0.6)), Math.floor(this.canvasHeight * (Math.random() * 0.5 + 1)), 32, AVO.SHAPE_CIRCLE);
+    actor.solid = false;
     actor.spritesheet = this.assets.images.fireworks;
     actor.animationSet = this.animationSets.fireworks;
     actor.playAnimation("idle");
     actor.rotation = AVO.ROTATION_NORTH;
-    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 12 + 4);
+    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 8 + 4);
+    this.actors.push(actor);
+  } else if (r < 80 && distancePercent >= 50) {  //Bizarre sideways fireworks
+    const actor = new Actor(FIREWORK_MISSILE, Math.floor(this.canvasWidth * (Math.random() * 0.6 + 1.2)), Math.floor(this.canvasHeight * (Math.random() * 0.8 + 0.1)), 32, AVO.SHAPE_CIRCLE);
+    actor.solid = false;
+    actor.spritesheet = this.assets.images.fireworks;
+    actor.animationSet = this.animationSets.fireworks;
+    actor.playAnimation("idle");
+    actor.rotation = AVO.ROTATION_WEST + (Math.random() * 0.1 - 0.05);
+    actor.attributes[AVO.ATTR.SPEED] = Math.floor(Math.random() * 4 + 2);
     this.actors.push(actor);
   }
 }
@@ -254,14 +297,6 @@ function prePaint() {
     const backgroundOffset = Math.floor((this.store.distance * 1) % this.canvasWidth);
     this.context2d.drawImage(this.assets.images.background.img, -backgroundOffset, 0);
     this.context2d.drawImage(this.assets.images.background.img, -backgroundOffset + this.canvasWidth, 0);
-    
-    //if (this.store.prevBGOffset > backgroundOffset) this.store.bgFlip = !this.store.bgFlip;
-    //this.store.prevBGOffset = backgroundOffset;
-    
-    //this.context2d.fillStyle = (this.store.bgFlip) ? "#069" : "#39c";
-    //this.context2d.fillRect(-backgroundOffset, 0, this.canvasWidth, this.canvasHeight);
-    //this.context2d.fillStyle = (this.store.bgFlip) ? "#39c" : "#069";
-    //this.context2d.fillRect(-backgroundOffset + this.canvasWidth, 0, this.canvasWidth, this.canvasHeight);
   }
 }
 
@@ -312,7 +347,7 @@ function postPaint() {
     if (this.pointer.state === AVO.INPUT_ACTIVE) {
       const player = this.refs[AVO.REF.PLAYER];
       
-      this.context2d.fillStyle = "#633";
+      this.context2d.fillStyle = "rgba(153, 51, 51, 0.5)";
       this.context2d.strokeStyle = "#933";
       this.context2d.lineWidth = 2;
       this.context2d.beginPath();
@@ -356,18 +391,56 @@ function postPaint() {
       
       this.context2d.stroke();
     }
-  } else if (this.state === AVO.STATE_COMIC && this.comicStrip &&
-      this.comicStrip.currentPanel === 0 && this.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
-    //Paint the UI: Time
-    const time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
-    let miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
-    while (miliseconds.length < 3) { miliseconds = "0" + miliseconds; }
-    let seconds = time % 60; seconds = (seconds >= 10) ? seconds : "0" + seconds;
-    let minutes = Math.floor(time / 60); minutes = (minutes >= 10) ? minutes : "0" + minutes;
+  } else if (this.state === AVO.STATE_COMIC && this.comicStrip && this.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
     this.context2d.font = AVO.DEFAULT_FONT;
     this.context2d.textAlign = "center";
     this.context2d.textBaseline = "middle";
-    this.context2d.fillStyle = "#000";
-    this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.5, this.canvasHeight * 0.15);
+    
+    //Paint the UI: tap indicator
+    if (this.store.tick < this.store.TICK_MAX / 2) {
+      //this.context2d.fillStyle = "rgba(204, 51, 51, 0.8)";
+      //this.context2d.lineWidth = 2;
+    } else {
+      this.context2d.fillStyle = "rgba(255, 204, 51, 0.8)";
+      this.context2d.lineWidth = 2;
+      
+      this.context2d.beginPath();
+      this.context2d.moveTo(this.canvasWidth * 0.48, this.canvasHeight * 0.9);
+      this.context2d.lineTo(this.canvasWidth * 0.5, this.canvasHeight * 0.92);
+      this.context2d.lineTo(this.canvasWidth * 0.52, this.canvasHeight * 0.9);
+      this.context2d.closePath();
+      this.context2d.fill();
+    }
+    
+    //Paint special Win text
+    if (this.comicStrip.name === "win_comic") {
+      this.context2d.fillStyle = "#000";
+      switch (this.comicStrip.currentPanel) {
+        case 0:
+          //Paint the UI: Time
+          const time = Math.floor(this.store.time / this.appConfig.framesPerSecond);
+          let miliseconds = (Math.floor(this.store.time / this.appConfig.framesPerSecond * 1000) % 1000).toString();
+          while (miliseconds.length < 3) { miliseconds = "0" + miliseconds; }
+          let seconds = time % 60; seconds = (seconds >= 10) ? seconds : "0" + seconds;
+          let minutes = Math.floor(time / 60); minutes = (minutes >= 10) ? minutes : "0" + minutes;
+          this.context2d.fillText("Your time:", this.canvasWidth * 0.25, this.canvasHeight * 0.55);
+          this.context2d.fillText(minutes + ":" + seconds + "." + miliseconds, this.canvasWidth * 0.25, this.canvasHeight * 0.6);
+          break;
+        case 1:
+          break;
+        case 2:
+          this.context2d.fillText("...", this.canvasWidth * 0.25, this.canvasHeight * 0.55);
+          break;
+        case 3:
+          this.context2d.fillText("Uh...", this.canvasWidth * 0.25, this.canvasHeight * 0.55);
+          this.context2d.fillText("Gong Xi Fa Cai!", this.canvasWidth * 0.25, this.canvasHeight * 0.60);
+          this.context2d.fillText("May you have", this.canvasWidth * 0.25, this.canvasHeight * 0.70);
+          this.context2d.fillText("a prosperous and", this.canvasWidth * 0.25, this.canvasHeight * 0.75);
+          this.context2d.fillText("totally not awkward", this.canvasWidth * 0.25, this.canvasHeight * 0.80);
+          this.context2d.fillText("Year of the Rooster!", this.canvasWidth * 0.25, this.canvasHeight * 0.85);
+          break;
+        default: break;
+      }
+    }
   }
 }
